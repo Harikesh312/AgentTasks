@@ -1,0 +1,91 @@
+.agent-trace {
+  background: var(--dark-bg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--dark-border);
+  overflow: hidden;
+  font-family: var(--font-mono);
+}
+.agent-trace-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--border-medium);
+}
+.trace-empty {
+  text-align: center;
+  color: var(--text-muted);
+}
+.trace-empty-icon { font-size: 2.5rem; display: block; margin-bottom: 12px; margin-left: auto; margin-right: auto; }
+.trace-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  background: var(--dark-surface);
+  border-bottom: 1px solid var(--dark-border);
+}
+.trace-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--dark-text);
+  font-family: var(--font-sans);
+}
+.trace-status {
+  font-size: 0.75rem;
+  color: var(--primary);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 107, 53, 0.1);
+}
+.trace-timeline {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.trace-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--dark-border);
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.4s ease;
+}
+.trace-step.visible {
+  opacity: 1;
+  transform: translateX(0);
+  border-left-color: var(--primary);
+}
+.trace-step.warning.visible {
+  border-left-color: #ff9800;
+}
+.trace-dot {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.trace-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.trace-text {
+  font-size: 0.82rem;
+  color: var(--dark-text);
+}
+.trace-warning-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #ff9800;
+  background: rgba(255, 152, 0, 0.12);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+}
+.trace-line { display: none; }
