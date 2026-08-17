@@ -14,6 +14,7 @@ import FileExplorer from '../components/FileExplorer';
 import PreviewPane from '../components/PreviewPane';
 import AgentTraceLog from '../components/AgentTraceLog';
 import EvaluationCard from '../components/EvaluationCard';
+import QuestionDiscussTab from '../components/QuestionDiscussTab';
 import './QuestionDetailPage.css';
 
 export default function QuestionDetailPage() {
@@ -109,6 +110,7 @@ export default function QuestionDetailPage() {
     { key: 'files', label: 'Files', icon: <FiFolder size={14} /> },
     { key: 'preview', label: 'Preview', icon: <FiMonitor size={14} /> },
     { key: 'trace', label: 'Trace', icon: <FiSearch size={14} /> },
+    { key: 'discuss', label: 'Discuss', icon: <FiMessageSquare size={14} /> },
   ];
 
   return (
@@ -220,6 +222,12 @@ export default function QuestionDetailPage() {
             )}
             {activeTab === 'trace' && (
               <AgentTraceLog trace={currentTrace} />
+            )}
+            {activeTab === 'discuss' && (
+              <QuestionDiscussTab 
+                questionId={question.id} 
+                onTryPrompt={() => setActiveTab('chat')}
+              />
             )}
           </div>
         </div>

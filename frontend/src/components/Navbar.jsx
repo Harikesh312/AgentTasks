@@ -41,7 +41,7 @@ export default function Navbar() {
           <Link to="/" className={`nav-link ${isActive('/profile') ? 'active' : ''}`}>Dashboard</Link>
           <Link to="/questions" className={`nav-link ${isActive('/questions') ? 'active' : ''}`}>Problems</Link>
           <Link to="/contest" className={`nav-link ${isActive('/contest') ? 'active' : ''}`}>Contest</Link>
-          <Link to="" className={`nav-link ${false ? 'active' : ''}`}>Discuss</Link>
+          <Link to="/discuss" className={`nav-link ${isActive('/discuss') ? 'active' : ''}`}>Discuss</Link>
           
           <div className="nav-dropdown-container">
             <span className="nav-link nav-dropdown-trigger">

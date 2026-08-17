@@ -6,6 +6,7 @@ import QuestionsPage from './pages/QuestionsPage';
 import QuestionDetailPage from './pages/QuestionDetailPage';
 import ProfilePage from './pages/ProfilePage';
 import ContestPage from './pages/ContestPage';
+import DiscussPage from './pages/DiscussPage';
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
           <Route path="/questions/:id" element={<QuestionDetailPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/contest" element={<ContestPage />} />
+          <Route path="/discuss" element={<DiscussPage />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
