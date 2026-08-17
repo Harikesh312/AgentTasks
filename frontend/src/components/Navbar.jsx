@@ -40,7 +40,7 @@ export default function Navbar() {
         <div className={`navbar-links ${mobileOpen ? 'mobile-open' : ''}`}>
           <Link to="/" className={`nav-link ${isActive('/profile') ? 'active' : ''}`}>Dashboard</Link>
           <Link to="/questions" className={`nav-link ${isActive('/questions') ? 'active' : ''}`}>Problems</Link>
-          <Link to="" className={`nav-link ${false ? 'active' : ''}`}>Contest</Link>
+          <Link to="/contest" className={`nav-link ${isActive('/contest') ? 'active' : ''}`}>Contest</Link>
           <Link to="" className={`nav-link ${false ? 'active' : ''}`}>Discuss</Link>
           
           <div className="nav-dropdown-container">
