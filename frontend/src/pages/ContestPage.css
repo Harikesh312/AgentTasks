@@ -447,6 +447,72 @@
 .leaderboard-section {
   margin-bottom: 48px;
 }
+/* ---------- Prizes Section ---------- */
+.prizes-section {
+  margin-bottom: 60px;
+}
+.prizes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.prize-card {
+  background: var(--bg-white);
+  border-radius: var(--radius-xl);
+  padding: 32px 24px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition);
+}
+.prize-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+.prize-card.gold { border-color: #fceea7; background: linear-gradient(180deg, #fffdf0 0%, var(--bg-white) 100%); }
+.prize-card.silver { border-color: #e2e2e2; background: linear-gradient(180deg, #f8f9fa 0%, var(--bg-white) 100%); }
+.prize-card.bronze { border-color: #f0dac9; background: linear-gradient(180deg, #fffaf5 0%, var(--bg-white) 100%); }
+
+.prize-image-wrapper {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: var(--bg-white);
+  box-shadow: var(--shadow-sm);
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.prize-image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+.prize-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.prize-card.gold .prize-title { color: #d4af37; }
+.prize-card.silver .prize-title { color: #8e8e8e; }
+.prize-card.bronze .prize-title { color: #a0522d; }
+
+.prize-reward {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+.prize-desc {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
 .leaderboard-table {
   width: 100%;
   border-radius: var(--radius-lg);

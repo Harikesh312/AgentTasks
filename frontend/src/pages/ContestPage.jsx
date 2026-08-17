@@ -255,6 +255,9 @@ export default function ContestPage() {
         </div>
       </section>
 
+      {/* ─── Prizes & Rewards ─── */}
+      <PrizesSection />
+
       {/* ─── Leaderboard ─── */}
       <section className="leaderboard-section" id="leaderboard-section">
         <h2 className="section-heading">Contest Leaderboard</h2>
@@ -620,5 +623,39 @@ function ContestDetailModal({ contest, onClose }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function PrizesSection() {
+  return (
+    <section className="prizes-section animate-fade" id="prizes-section">
+      <h2 className="section-heading">Contest Prizes & Rewards</h2>
+      <div className="prizes-grid">
+        <div className="prize-card gold">
+          <div className="prize-image-wrapper">
+            <img src="/gold_trophy.jpg" alt="1st Place Gold Trophy" onError={(e) => { e.target.style.display = 'none'; }} />
+          </div>
+          <h3 className="prize-title">1st Place</h3>
+          <div className="prize-reward">$500 + Champion Badge</div>
+          <p className="prize-desc">Exclusive AgentPrep Champion Badge, 1-year Pro subscription, and $500 cash prize.</p>
+        </div>
+        <div className="prize-card silver">
+          <div className="prize-image-wrapper">
+            <img src="/silver_medal.jpg" alt="2nd Place Silver Medal" onError={(e) => { e.target.style.display = 'none'; }} />
+          </div>
+          <h3 className="prize-title">2nd Place</h3>
+          <div className="prize-reward">$250 + Elite Badge</div>
+          <p className="prize-desc">AgentPrep Elite Badge, 6-months Pro subscription, and $250 cash prize.</p>
+        </div>
+        <div className="prize-card bronze">
+          <div className="prize-image-wrapper">
+            <img src="/bronze_medal.jpg" alt="3rd Place Bronze Medal" onError={(e) => { e.target.style.display = 'none'; }} />
+          </div>
+          <h3 className="prize-title">3rd Place</h3>
+          <div className="prize-reward">$100 + Pro Badge</div>
+          <p className="prize-desc">AgentPrep Pro Badge, 3-months Pro subscription, and $100 cash prize.</p>
+        </div>
+      </div>
+    </section>
   );
 }
