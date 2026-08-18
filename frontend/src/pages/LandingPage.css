@@ -103,8 +103,10 @@
 
 .stat-item {
   display: flex;
-  align-items: flex-start;
-  gap: 20px;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
   flex: 1;
 }
 
@@ -125,6 +127,7 @@
 .stat-content {
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
 .stat-number {

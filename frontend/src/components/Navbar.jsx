@@ -5,7 +5,7 @@ import { FiHexagon, FiUser, FiLogOut, FiMenu, FiX, FiChevronDown, FiUsers, FiGri
 import './Navbar.css';
 
 export default function Navbar() {
-  const { isLoggedIn, toggleAuth } = useAuth();
+  const { isLoggedIn, logout, user } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -23,6 +23,10 @@ export default function Navbar() {
 
   useEffect(() => { setMobileOpen(false); }, [location]);
 
+  if (location.pathname === '/login' || location.pathname === '/signup') {
+    return null;
+  }
+
   const isActive = (path) => location.pathname === path;
 
   return (
@@ -38,10 +42,13 @@ export default function Navbar() {
         </button>
 
         <div className={`navbar-links ${mobileOpen ? 'mobile-open' : ''}`}>
-          <Link to="/" className={`nav-link ${isActive('/profile') ? 'active' : ''}`}>Dashboard</Link>
+          <Link to="/" className={`nav-link ${isActive('/') ? 'active' : ''}`}>Dashboard</Link>
           <Link to="/questions" className={`nav-link ${isActive('/questions') ? 'active' : ''}`}>Problems</Link>
           <Link to="/contest" className={`nav-link ${isActive('/contest') ? 'active' : ''}`}>Contest</Link>
           <Link to="/discuss" className={`nav-link ${isActive('/discuss') ? 'active' : ''}`}>Discuss</Link>
+          {isLoggedIn && (
+            <Link to="/profile" className={`nav-link ${isActive('/profile') ? 'active' : ''}`}>Profile</Link>
+          )}
           
           <div className="nav-dropdown-container">
             <span className="nav-link nav-dropdown-trigger">
@@ -62,14 +69,14 @@ export default function Navbar() {
           {isLoggedIn ? (
             <div className="profile-dropdown" ref={dropdownRef}>
               <button className="avatar-btn" onClick={() => setDropdownOpen(!dropdownOpen)} id="profile-avatar-btn">
-                <div className="avatar">AC</div>
+                <div className="avatar">{user?.name ? user.name.charAt(0).toUpperCase() : 'U'}</div>
               </button>
               {dropdownOpen && (
                 <div className="dropdown-menu animate-fade">
                   <Link to="/profile" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
                     <FiUser size={16} /> Profile
                   </Link>
-                  <button className="dropdown-item" onClick={() => { toggleAuth(); setDropdownOpen(false); }}>
+                  <button className="dropdown-item" onClick={() => { logout(); setDropdownOpen(false); }}>
                     <FiLogOut size={16} /> Logout
                   </button>
                 </div>
@@ -77,8 +84,8 @@ export default function Navbar() {
             </div>
           ) : (
             <div className="auth-buttons">
-              <button className="btn-outline btn-sm" onClick={toggleAuth}>Log In</button>
-              <button className="btn-primary btn-sm" onClick={toggleAuth}>Sign Up</button>
+              <Link to="/login" className="btn-outline btn-sm">Log In</Link>
+              <Link to="/signup" className="btn-primary btn-sm">Sign Up</Link>
             </div>
           )}
         </div>

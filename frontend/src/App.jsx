@@ -7,6 +7,18 @@ import QuestionDetailPage from './pages/QuestionDetailPage';
 import ProfilePage from './pages/ProfilePage';
 import ContestPage from './pages/ContestPage';
 import DiscussPage from './pages/DiscussPage';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
+
+function ProtectedRoute({ children }) {
+  const { isLoggedIn } = useAuth();
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
 
 export default function App() {
   return (
@@ -15,11 +27,33 @@ export default function App() {
         <Navbar />
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/questions" element={<QuestionsPage />} />
-          <Route path="/questions/:id" element={<QuestionDetailPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/contest" element={<ContestPage />} />
-          <Route path="/discuss" element={<DiscussPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/questions" element={
+            <ProtectedRoute>
+              <QuestionsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/questions/:id" element={
+            <ProtectedRoute>
+              <QuestionDetailPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          } />
+          <Route path="/contest" element={
+            <ProtectedRoute>
+              <ContestPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/discuss" element={
+            <ProtectedRoute>
+              <DiscussPage />
+            </ProtectedRoute>
+          } />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

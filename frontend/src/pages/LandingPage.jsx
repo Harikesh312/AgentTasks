@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FiCpu, FiFileText, FiBarChart2, FiArrowRight, FiTarget, FiUsers } from 'react-icons/fi';
+import { useAuth } from '../context/AuthContext';
 import './LandingPage.css';
 
 export default function LandingPage() {
+  const { isLoggedIn } = useAuth();
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -46,9 +48,15 @@ export default function LandingPage() {
             <Link to="/questions" className="btn-primary btn-lg">
               Browse Questions <FiArrowRight size={16} />
             </Link>
-            <Link to="/profile" className="btn-outline btn-lg">
-              View Demo Profile
-            </Link>
+            {isLoggedIn ? (
+              <Link to="/profile" className="btn-outline btn-lg">
+                View Profile
+              </Link>
+            ) : (
+              <Link to="/login" className="btn-outline btn-lg">
+                Log In
+              </Link>
+            )}
           </div>
         </div>
       </section>
@@ -125,7 +133,11 @@ export default function LandingPage() {
         <div className="cta-card">
           <h2>Ready to test your prompting skills?</h2>
           <p>Join thousands of developers mastering AI agent orchestration.</p>
-          <Link to="/questions" className="btn-primary btn-lg">Get Started Free <FiArrowRight size={16} /></Link>
+          {isLoggedIn ? (
+            <Link to="/questions" className="btn-primary btn-lg">Get Started <FiArrowRight size={16} /></Link>
+          ) : (
+            <Link to="/signup" className="btn-primary btn-lg">Sign Up Free <FiArrowRight size={16} /></Link>
+          )}
         </div>
       </section>
     </div>
