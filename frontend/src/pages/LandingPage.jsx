@@ -1,8 +1,27 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiCpu, FiFileText, FiBarChart2, FiArrowRight } from 'react-icons/fi';
+import { FiCpu, FiFileText, FiBarChart2, FiArrowRight, FiTarget, FiUsers } from 'react-icons/fi';
 import './LandingPage.css';
 
 export default function LandingPage() {
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in-view');
+          }
+        });
+      },
+      { threshold: 0.2 }
+    );
+
+    const elements = document.querySelectorAll('.animate-on-scroll');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div className="landing-page" id="landing-page">
       <section className="hero">
@@ -34,46 +53,76 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="stats-row animate-fade">
-        <div className="stat-block">
-          <span className="stat-number">50+</span>
-          <span className="stat-text">Questions</span>
-        </div>
-        <div className="stat-divider" />
-        <div className="stat-block">
-          <span className="stat-number">82%</span>
-          <span className="stat-text">Avg. Score</span>
-        </div>
-        <div className="stat-divider" />
-        <div className="stat-block">
-          <span className="stat-number">1.2K</span>
-          <span className="stat-text">Active Learners</span>
-        </div>
-      </section>
-
-      <section className="features-section">
-        <h2 className="section-title">How It Works</h2>
-        <div className="features-grid">
-          <div className="feature-card animate-fade" style={{ animationDelay: '0.1s' }}>
-            <div className="feature-icon"><FiFileText size={36} /></div>
-            <h3>Read the Prompt</h3>
-            <p>Get a design task with a reference image and requirements. No coding needed — just prompt writing.</p>
+      <section className="landing-stats-section animate-on-scroll fade-up">
+        <div className="stats-container">
+          <div className="stat-item">
+            <div className="stat-icon-wrapper"><FiFileText className="stat-icon" /></div>
+            <div className="stat-content">
+              <span className="stat-number">50+</span>
+              <span className="stat-label">Questions</span>
+              <span className="stat-sublabel">Practice tasks</span>
+            </div>
           </div>
-          <div className="feature-card animate-fade" style={{ animationDelay: '0.2s' }}>
-            <div className="feature-icon"><FiCpu size={36} /></div>
-            <h3>Guide the Agent</h3>
-            <p>Write prompts to instruct an AI agent. Watch it generate code in real-time. Fix mistakes with follow-ups.</p>
+          <div className="stat-divider" />
+          <div className="stat-item">
+            <div className="stat-icon-wrapper"><FiTarget className="stat-icon" /></div>
+            <div className="stat-content">
+              <span className="stat-number">82%</span>
+              <span className="stat-label">Avg. Score</span>
+            </div>
           </div>
-          <div className="feature-card animate-fade" style={{ animationDelay: '0.3s' }}>
-            <div className="feature-icon"><FiBarChart2 size={36} /></div>
-            <h3>Get Scored</h3>
-            <p>Receive a detailed evaluation: visual accuracy, code quality, and prompt efficiency — all in one score.</p>
+          <div className="stat-divider" />
+          <div className="stat-item">
+            <div className="stat-icon-wrapper"><FiUsers className="stat-icon" /></div>
+            <div className="stat-content">
+              <span className="stat-number">1.2K</span>
+              <span className="stat-label">Active Learners</span>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="cta-section">
-        <div className="cta-card animate-fade">
+      <section className="how-it-works-section animate-on-scroll">
+        <div className="hiw-header">
+          <h2 className="section-title">How It Works</h2>
+          <p className="hiw-subtitle">From your first prompt to a detailed evaluation — see how AgentPrep turns ideas into results.</p>
+        </div>
+
+        <div className="timeline-container">
+          <div className="timeline-track">
+            <div className="timeline-line-bg"></div>
+            <div className="timeline-line-progress"></div>
+            <div className="timeline-nodes">
+              <div className="timeline-node active" style={{ transitionDelay: '0.1s' }}>01</div>
+              <div className="timeline-node active" style={{ transitionDelay: '0.4s' }}>02</div>
+              <div className="timeline-node active" style={{ transitionDelay: '0.7s' }}>03</div>
+            </div>
+          </div>
+
+          <div className="timeline-steps">
+            <div className="timeline-step" style={{ transitionDelay: '0.2s' }}>
+              <div className="step-icon-wrapper"><FiFileText size={24} /></div>
+              <h3 className="step-title">Read the Prompt</h3>
+              <p className="step-desc">Get a design task with a reference image and requirements. No coding needed — just prompt writing.</p>
+            </div>
+            
+            <div className="timeline-step" style={{ transitionDelay: '0.5s' }}>
+              <div className="step-icon-wrapper"><FiCpu size={24} /></div>
+              <h3 className="step-title">Guide the Agent</h3>
+              <p className="step-desc">Write prompts to instruct an AI agent. Watch it generate code in real-time. Fix mistakes with follow-ups.</p>
+            </div>
+            
+            <div className="timeline-step" style={{ transitionDelay: '0.8s' }}>
+              <div className="step-icon-wrapper"><FiBarChart2 size={24} /></div>
+              <h3 className="step-title">Get Scored</h3>
+              <p className="step-desc">Receive a detailed evaluation covering visual accuracy, code quality, and prompt efficiency.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="cta-section animate-on-scroll fade-up">
+        <div className="cta-card">
           <h2>Ready to test your prompting skills?</h2>
           <p>Join thousands of developers mastering AI agent orchestration.</p>
           <Link to="/questions" className="btn-primary btn-lg">Get Started Free <FiArrowRight size={16} /></Link>
