@@ -43,6 +43,7 @@ router.post('/register', async (req, res) => {
         _id: user.id,
         name: user.name,
         email: user.email,
+        completedQuestions: user.completedQuestions,
         token: generateToken(user._id),
       });
     } else {
@@ -72,6 +73,7 @@ router.post('/login', async (req, res) => {
         _id: user.id,
         name: user.name,
         email: user.email,
+        completedQuestions: user.completedQuestions,
         token: generateToken(user._id),
       });
     } else {
@@ -93,6 +95,30 @@ router.get('/me', protect, async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
     res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   POST /api/auth/complete/:questionId
+// @desc    Mark a question as completed
+// @access  Private
+router.post('/complete/:questionId', protect, async (req, res) => {
+  try {
+    const questionId = parseInt(req.params.questionId, 10);
+    const user = await User.findById(req.user.id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (!user.completedQuestions.includes(questionId)) {
+      user.completedQuestions.push(questionId);
+      await user.save();
+    }
+
+    res.json(user.completedQuestions);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

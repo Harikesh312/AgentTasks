@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <rect width="800" height="450" fill="#f8fafc" />
+  <rect x="50" y="50" width="700" height="350" fill="#ffffff" rx="8" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.05))" />
+  
+  <text x="70" y="85" font-family="sans-serif" font-size="18" font-weight="bold" fill="#0f172a">Users</text>
+  <rect x="520" y="65" width="120" height="30" fill="#f1f5f9" rx="4" />
+  <text x="530" y="85" font-family="sans-serif" font-size="12" fill="#94a3b8">Search...</text>
+  <rect x="650" y="65" width="80" height="30" fill="#3b82f6" rx="4" />
+  <text x="690" y="85" font-family="sans-serif" font-size="12" fill="#ffffff" text-anchor="middle">Add User</text>
+  
+  <rect x="50" y="110" width="700" height="40" fill="#f8fafc" />
+  <text x="70" y="135" font-family="sans-serif" font-size="12" font-weight="bold" fill="#475569">Name</text>
+  <text x="250" y="135" font-family="sans-serif" font-size="12" font-weight="bold" fill="#475569">Email</text>
+  <text x="450" y="135" font-family="sans-serif" font-size="12" font-weight="bold" fill="#475569">Role</text>
+  <text x="600" y="135" font-family="sans-serif" font-size="12" font-weight="bold" fill="#475569">Status</text>
+  
+  <line x1="50" y1="150" x2="750" y2="150" stroke="#e2e8f0" />
+  <text x="70" y="180" font-family="sans-serif" font-size="14" fill="#0f172a">Alice Smith</text>
+  <text x="250" y="180" font-family="sans-serif" font-size="14" fill="#475569">alice@example.com</text>
+  <text x="450" y="180" font-family="sans-serif" font-size="14" fill="#475569">Admin</text>
+  <rect x="600" y="165" width="60" height="20" fill="#d1fae5" rx="10" />
+  <text x="630" y="179" font-family="sans-serif" font-size="10" font-weight="bold" fill="#065f46" text-anchor="middle">Active</text>
+  
+  <line x1="50" y1="200" x2="750" y2="200" stroke="#e2e8f0" />
+  <text x="70" y="230" font-family="sans-serif" font-size="14" fill="#0f172a">Bob Jones</text>
+  <text x="250" y="230" font-family="sans-serif" font-size="14" fill="#475569">bob@example.com</text>
+  <text x="450" y="230" font-family="sans-serif" font-size="14" fill="#475569">User</text>
+  <rect x="600" y="215" width="60" height="20" fill="#fef3c7" rx="10" />
+  <text x="630" y="229" font-family="sans-serif" font-size="10" font-weight="bold" fill="#92400e" text-anchor="middle">Pending</text>
+  
+  <line x1="50" y1="360" x2="750" y2="360" stroke="#e2e8f0" />
+  <text x="70" y="385" font-family="sans-serif" font-size="12" fill="#64748b">Showing 1 to 10 of 97 results</text>
+  <rect x="610" y="370" width="120" height="24" fill="#f1f5f9" rx="4" />
+  <text x="670" y="386" font-family="sans-serif" font-size="12" fill="#475569" text-anchor="middle">Previous  Next</text>
+</svg>

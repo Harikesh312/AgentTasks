@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <rect width="800" height="450" fill="#f8fafc" />
+  <rect x="50" y="150" width="160" height="120" rx="8" fill="#ffffff" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.1))" />
+  <text x="70" y="180" font-family="sans-serif" font-size="14" fill="#64748b">Revenue</text>
+  <text x="70" y="220" font-family="sans-serif" font-size="28" font-weight="bold" fill="#0f172a">$45.2K</text>
+  <text x="70" y="250" font-family="sans-serif" font-size="12" fill="#10b981">+12.5%</text>
+
+  <rect x="230" y="150" width="160" height="120" rx="8" fill="#ffffff" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.1))" />
+  <text x="250" y="180" font-family="sans-serif" font-size="14" fill="#64748b">Users</text>
+  <text x="250" y="220" font-family="sans-serif" font-size="28" font-weight="bold" fill="#0f172a">1,204</text>
+  <text x="250" y="250" font-family="sans-serif" font-size="12" fill="#10b981">+5.2%</text>
+
+  <rect x="410" y="150" width="160" height="120" rx="8" fill="#ffffff" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.1))" />
+  <text x="430" y="180" font-family="sans-serif" font-size="14" fill="#64748b">Orders</text>
+  <text x="430" y="220" font-family="sans-serif" font-size="28" font-weight="bold" fill="#0f172a">342</text>
+  <text x="430" y="250" font-family="sans-serif" font-size="12" fill="#ef4444">-2.1%</text>
+
+  <rect x="590" y="150" width="160" height="120" rx="8" fill="#ffffff" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.1))" />
+  <text x="610" y="180" font-family="sans-serif" font-size="14" fill="#64748b">Conversion</text>
+  <text x="610" y="220" font-family="sans-serif" font-size="28" font-weight="bold" fill="#0f172a">3.8%</text>
+  <text x="610" y="250" font-family="sans-serif" font-size="12" fill="#10b981">+0.4%</text>
+</svg>

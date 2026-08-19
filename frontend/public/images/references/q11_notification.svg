@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <rect width="800" height="450" fill="#f8fafc" />
+  <rect x="500" y="50" width="250" height="320" rx="12" fill="#ffffff" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.1))" />
+  <text x="520" y="85" font-family="sans-serif" font-size="18" font-weight="bold" fill="#0f172a">Notifications</text>
+  <text x="680" y="85" font-family="sans-serif" font-size="12" fill="#3b82f6">Mark all read</text>
+  <line x1="500" y1="100" x2="750" y2="100" stroke="#e2e8f0" stroke-width="1" />
+  <circle cx="515" cy="130" r="4" fill="#3b82f6" />
+  <text x="530" y="134" font-family="sans-serif" font-size="14" font-weight="bold" fill="#0f172a">New Comment</text>
+  <line x1="500" y1="160" x2="750" y2="160" stroke="#e2e8f0" stroke-width="1" />
+  <text x="530" y="190" font-family="sans-serif" font-size="14" fill="#475569">System Update</text>
+  <circle cx="700" cy="40" r="10" fill="#ef4444" />
+  <text x="700" y="44" font-family="sans-serif" font-size="10" fill="#ffffff" text-anchor="middle">1</text>
+</svg>

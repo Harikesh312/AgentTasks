@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <rect width="800" height="450" fill="#f8fafc" />
+  <rect x="250" y="50" width="300" height="360" fill="#ffffff" rx="12" filter="drop-shadow(0 10px 15px rgba(0,0,0,0.1))" />
+  
+  <rect x="250" y="50" width="300" height="200" fill="#cbd5e1" rx="12" />
+  <rect x="250" y="240" width="300" height="10" fill="#ffffff" />
+  <text x="400" y="150" font-family="sans-serif" font-size="18" font-weight="bold" fill="#ffffff" text-anchor="middle">Product Image</text>
+  
+  <text x="270" y="280" font-family="sans-serif" font-size="18" font-weight="bold" fill="#0f172a">Premium Wireless Headphones</text>
+  <text x="270" y="300" font-family="sans-serif" font-size="14" fill="#64748b">Electronics</text>
+  
+  <text x="270" y="330" font-family="sans-serif" font-size="20" font-weight="bold" fill="#0f172a">$299.99</text>
+  <text x="350" y="330" font-family="sans-serif" font-size="14" fill="#94a3b8" text-decoration="line-through">$349.99</text>
+  
+  <rect x="270" y="350" width="260" height="40" fill="#3b82f6" rx="6" />
+  <text x="400" y="375" font-family="sans-serif" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">Add to Cart</text>
+</svg>

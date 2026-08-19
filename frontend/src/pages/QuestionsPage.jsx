@@ -26,6 +26,7 @@ export default function QuestionsPage() {
 
   return (
     <div className="questions-page" id="questions-page">
+      <div className="page-watermark"></div>
       <div className="questions-header">
         <h1 className="page-title">Problems</h1>
         <p className="page-subtitle">

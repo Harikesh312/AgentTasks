@@ -146,10 +146,16 @@ export default function QuestionDetailPage() {
             {/* Reference image */}
             <div className="qd-section">
               <h3 className="qd-section-title"><FiImage size={14} /> Target Design</h3>
-              <div className="qd-ref-image">
-                <FiImage size={36} />
-                <span>Reference Design Preview</span>
-              </div>
+              {question.referenceImage ? (
+                <div className="qd-ref-image-container" style={{ marginTop: '12px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                  <img src={question.referenceImage} alt="Reference Design" style={{ width: '100%', display: 'block', objectFit: 'contain' }} />
+                </div>
+              ) : (
+                <div className="qd-ref-image">
+                  <FiImage size={36} />
+                  <span>Reference Design Preview</span>
+                </div>
+              )}
             </div>
 
             {/* Requirements */}
@@ -224,8 +230,8 @@ export default function QuestionDetailPage() {
               <AgentTraceLog trace={currentTrace} />
             )}
             {activeTab === 'discuss' && (
-              <QuestionDiscussTab 
-                questionId={question.id} 
+              <QuestionDiscussTab
+                questionId={question.id}
                 onTryPrompt={() => setActiveTab('chat')}
               />
             )}

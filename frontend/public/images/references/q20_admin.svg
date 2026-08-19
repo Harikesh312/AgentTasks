@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <rect width="800" height="450" fill="#f8fafc" />
+  <rect x="50" y="50" width="700" height="350" rx="8" fill="#ffffff" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.1))" />
+  <rect x="70" y="70" width="200" height="32" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1" />
+  <text x="80" y="90" font-family="sans-serif" font-size="12" fill="#94a3b8">Search users...</text>
+  <rect x="290" y="70" width="100" height="32" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1" />
+  <text x="300" y="90" font-family="sans-serif" font-size="12" fill="#475569">Status: All</text>
+  
+  <rect x="50" y="120" width="700" height="40" fill="#f8fafc" />
+  <text x="70" y="145" font-family="sans-serif" font-size="12" font-weight="bold" fill="#475569">Name ▾</text>
+  <text x="250" y="145" font-family="sans-serif" font-size="12" font-weight="bold" fill="#475569">Email</text>
+  <text x="450" y="145" font-family="sans-serif" font-size="12" font-weight="bold" fill="#475569">Status</text>
+  <text x="600" y="145" font-family="sans-serif" font-size="12" font-weight="bold" fill="#475569">Role</text>
+  
+  <line x1="50" y1="160" x2="750" y2="160" stroke="#e2e8f0" />
+  <text x="70" y="190" font-family="sans-serif" font-size="12" fill="#0f172a">Alice Smith</text>
+  <text x="250" y="190" font-family="sans-serif" font-size="12" fill="#475569">alice@example.com</text>
+  <text x="450" y="190" font-family="sans-serif" font-size="12" fill="#10b981">Active</text>
+  <text x="600" y="190" font-family="sans-serif" font-size="12" fill="#475569">Admin</text>
+  
+  <line x1="50" y1="210" x2="750" y2="210" stroke="#e2e8f0" />
+  <text x="70" y="240" font-family="sans-serif" font-size="12" fill="#0f172a">Bob Jones</text>
+  <text x="250" y="240" font-family="sans-serif" font-size="12" fill="#475569">bob@example.com</text>
+  <text x="450" y="240" font-family="sans-serif" font-size="12" fill="#f59e0b">Invited</text>
+  <text x="600" y="240" font-family="sans-serif" font-size="12" fill="#475569">User</text>
+  
+  <line x1="50" y1="360" x2="750" y2="360" stroke="#e2e8f0" />
+  <text x="70" y="385" font-family="sans-serif" font-size="12" fill="#64748b">Showing 1-10 of 42</text>
+  <text x="680" y="385" font-family="sans-serif" font-size="12" fill="#3b82f6">&lt; 1 2 3 &gt;</text>
+</svg>

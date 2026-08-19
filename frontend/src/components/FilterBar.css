@@ -1,77 +1,158 @@
 .filter-bar {
-  background: var(--bg-white);
-  border-radius: var(--radius-lg);
-  padding: 20px 24px;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-light);
+  background: var(--bg-white, #ffffff);
+  border-radius: var(--radius-lg, 14px);
+  padding: 18px 24px;
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06));
+  border: 1px solid var(--border-light, #E8E8E8);
   margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: box-shadow var(--transition);
 }
+
+.filter-bar:hover {
+  box-shadow: var(--shadow-md, 0 4px 12px rgba(0,0,0,0.08));
+}
+
 .search-wrapper {
   position: relative;
-  margin-bottom: 16px;
 }
+
 .search-icon {
   position: absolute;
-  left: 14px;
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 0.9rem;
+  font-size: 1rem;
+  color: var(--text-muted, #999999);
+  transition: color var(--transition);
+  pointer-events: none;
 }
+
 .search-input {
   width: 100%;
-  padding: 12px 16px 12px 42px;
-  border: 1.5px solid var(--border-light);
-  border-radius: var(--radius-md);
-  font-size: 0.9rem;
-  background: var(--bg-off-white);
+  padding: 12px 16px 12px 46px;
+  border: 1.5px solid var(--border-light, #E8E8E8);
+  border-radius: var(--radius-md, 10px);
+  font-size: 0.95rem;
+  background: var(--bg-off-white, #FAFAFA);
   transition: all var(--transition);
-  color: var(--text-primary);
+  color: var(--text-primary, #1A1A1A);
+  font-family: inherit;
 }
+
+.search-input::placeholder {
+  color: var(--text-muted, #999999);
+}
+
 .search-input:focus {
   outline: none;
-  border-color: var(--primary);
-  background: var(--bg-white);
-  box-shadow: 0 0 0 3px var(--primary-glow);
+  border-color: var(--primary, #FF6B35);
+  background: var(--bg-white, #ffffff);
+  box-shadow: 0 0 0 3px var(--primary-glow, rgba(255, 107, 53, 0.15));
 }
+
+.search-input:focus + .search-icon,
+.search-wrapper:focus-within .search-icon {
+  color: var(--primary, #FF6B35);
+}
+
 .filter-chips-row {
   display: flex;
   gap: 24px;
   flex-wrap: wrap;
 }
+
 .filter-group {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
+
 .filter-label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted, #999999);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .chip {
-  padding: 6px 14px;
-  border-radius: var(--radius-pill);
-  font-size: 0.8rem;
+  padding: 6px 16px;
+  border-radius: var(--radius-pill, 50px);
+  font-size: 0.82rem;
   font-weight: 500;
-  background: var(--bg-light);
-  color: var(--text-secondary);
+  background: var(--bg-light, #F5F5F5);
+  color: var(--text-secondary, #666666);
   border: 1.5px solid transparent;
   transition: all var(--transition);
+  cursor: pointer;
+  user-select: none;
 }
-.chip:hover { background: var(--primary-light); color: var(--primary); }
+
+.chip:hover {
+  background: var(--primary-light, #FFF3E9);
+  color: var(--primary, #FF6B35);
+  transform: translateY(-1px);
+}
+
+.chip:active {
+  transform: translateY(0);
+}
+
 .chip.active {
-  background: var(--primary);
+  background: var(--primary, #FF6B35);
   color: white;
-  border-color: var(--primary);
+  border-color: var(--primary, #FF6B35);
+  box-shadow: 0 2px 6px var(--primary-glow, rgba(255, 107, 53, 0.15));
 }
-.chip-easy.active { background: var(--easy-text); }
-.chip-medium.active { background: var(--medium-text); }
-.chip-hard.active { background: var(--hard-text); }
+
+/* Distinctive active colors for difficulty */
+.chip-easy.active {
+  background: var(--easy-text, #2E7D32);
+  border-color: var(--easy-text, #2E7D32);
+  box-shadow: 0 2px 6px rgba(46, 125, 50, 0.2);
+}
+
+.chip-medium.active {
+  background: var(--medium-text, #E65100);
+  border-color: var(--medium-text, #E65100);
+  box-shadow: 0 2px 6px rgba(230, 81, 0, 0.2);
+}
+
+.chip-hard.active {
+  background: var(--hard-text, #C62828);
+  border-color: var(--hard-text, #C62828);
+  box-shadow: 0 2px 6px rgba(198, 40, 40, 0.2);
+}
 
 @media (max-width: 768px) {
-  .filter-chips-row { flex-direction: column; gap: 12px; }
+  .filter-bar {
+    padding: 16px;
+    gap: 12px;
+  }
+  .filter-chips-row {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .filter-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .chips {
+    gap: 6px;
+  }
+  .chip {
+    padding: 5px 14px;
+    font-size: 0.8rem;
+  }
 }

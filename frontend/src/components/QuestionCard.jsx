@@ -1,26 +1,28 @@
 import { Link } from 'react-router-dom';
-import { FiCheckCircle, FiCircle, FiAlertTriangle } from 'react-icons/fi';
+import { FiAlertTriangle } from 'react-icons/fi';
+import { useAuth } from '../context/AuthContext';
+import QuestionStatus from './QuestionStatus';
 import './QuestionCard.css';
 
 export default function QuestionCard({ question, index }) {
-  const { id, title, difficulty, category, isOptimizationTrap, avgAttempts } = question;
-  const solvedIds = [1, 2, 4, 5, 6];
-  const solved = solvedIds.includes(id);
+  const { id, title, difficulty, category, isOptimizationTrap, avgAttempts, referenceImage } = question;
+  const { completedQuestions } = useAuth();
+  
+  const solved = completedQuestions.includes(id);
 
   return (
     <Link to={`/questions/${id}`} className="question-row" id={`question-${id}`} style={{ animationDelay: `${index * 0.05}s` }}>
       <div className="q-status">
-        {solved ? (
-          <FiCheckCircle className="status-icon solved" size={18} />
-        ) : (
-          <FiCircle className="status-icon" size={18} />
-        )}
+        <QuestionStatus solved={solved} />
       </div>
       <div className="q-title-cell">
-        <span className="q-title">{title}</span>
-        {isOptimizationTrap && (
-          <span className="badge badge-trap"><FiAlertTriangle size={12} /> Optimization Trap</span>
-        )}
+
+        <div className="q-title-info">
+          <span className="q-title">{title}</span>
+          {isOptimizationTrap && (
+            <span className="badge badge-trap"><FiAlertTriangle size={12} /> Optimization Trap</span>
+          )}
+        </div>
       </div>
       <div className="q-difficulty">
         <span className={`badge badge-${difficulty.toLowerCase()}`}>{difficulty}</span>

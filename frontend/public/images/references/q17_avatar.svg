@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <rect width="800" height="450" fill="#f8fafc" />
+  <rect x="100" y="50" width="600" height="60" rx="8" fill="#ffffff" />
+  <circle cx="650" cy="80" r="16" fill="#cbd5e1" />
+  <rect x="520" y="120" width="160" height="150" rx="8" fill="#ffffff" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.1))" />
+  <text x="540" y="150" font-family="sans-serif" font-size="14" fill="#0f172a">Profile</text>
+  <text x="540" y="180" font-family="sans-serif" font-size="14" fill="#0f172a">Settings</text>
+  <line x1="520" y1="200" x2="680" y2="200" stroke="#f1f5f9" stroke-width="1" />
+  <text x="540" y="230" font-family="sans-serif" font-size="14" fill="#ef4444">Log Out</text>
+</svg>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <rect width="800" height="450" fill="#f8fafc" />
+  <!-- Card -->
+  <rect x="250" y="75" width="300" height="300" rx="12" fill="#ffffff" filter="drop-shadow(0 4px 6px rgba(0,0,0,0.1))" />
+  <!-- Title -->
+  <text x="400" y="130" font-family="sans-serif" font-size="24" font-weight="bold" fill="#0f172a" text-anchor="middle">Sign In</text>
+  <!-- Email Input -->
+  <rect x="280" y="160" width="240" height="40" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1" />
+  <text x="290" y="185" font-family="sans-serif" font-size="14" fill="#94a3b8">Email address</text>
+  <text x="290" y="215" font-family="sans-serif" font-size="12" fill="#ef4444">Invalid email format</text>
+  <!-- Password Input -->
+  <rect x="280" y="230" width="240" height="40" rx="6" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1" />
+  <text x="290" y="255" font-family="sans-serif" font-size="14" fill="#94a3b8">Password</text>
+  <!-- Button -->
+  <rect x="280" y="290" width="240" height="44" rx="6" fill="#3b82f6" />
+  <text x="400" y="317" font-family="sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">Sign In</text>
+  <!-- Spinner -->
+  <circle cx="340" cy="312" r="8" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="30" opacity="0.8" />
+</svg>
