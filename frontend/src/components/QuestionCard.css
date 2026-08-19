@@ -1,25 +1,59 @@
 .question-row {
   display: grid;
-  grid-template-columns: 50px minmax(0, 1fr) 100px minmax(120px, 160px) 100px;
+  grid-template-columns: 50px 100px minmax(0, 1fr) 100px minmax(120px, 160px) 100px;
   align-items: center;
   padding: 18px 24px;
   background: var(--bg-white, #ffffff);
   border: 1px solid var(--border-light, #E8E8E8);
   border-radius: var(--radius-lg, 14px);
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   animation: fadeIn 0.4s ease forwards;
   opacity: 0;
   cursor: pointer;
   text-decoration: none;
   box-shadow: var(--shadow-xs, 0 1px 2px rgba(0,0,0,0.04));
+  position: relative;
+  overflow: hidden; /* For the subtle difficulty border */
+}
+
+/* Difficulty Accent Bar */
+.question-row.diff-easy { background: #F3FBF5; }
+.question-row.diff-medium { background: #FFF9EF; }
+.question-row.diff-hard { background: #FFF4F5; }
+
+.question-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: transparent;
+  transition: background var(--transition);
+}
+
+.question-row.diff-easy::before { background: rgba(46, 125, 50, 0.35); }
+.question-row.diff-medium::before { background: rgba(230, 81, 0, 0.35); }
+.question-row.diff-hard::before { background: rgba(198, 40, 40, 0.35); }
+
+.question-row:hover::before { width: 6px; }
+.question-row.diff-easy:hover::before { background: var(--easy-text, #2E7D32); }
+.question-row.diff-medium:hover::before { background: var(--medium-text, #E65100); }
+.question-row.diff-hard:hover::before { background: var(--hard-text, #C62828); }
+
+/* Completed tint */
+.question-row.completed-row {
+  background-image: linear-gradient(to right, rgba(16, 185, 129, 0.04), transparent 20%);
+}
+.question-row.completed-row:hover {
+  background-image: linear-gradient(to right, rgba(16, 185, 129, 0.08), transparent 30%);
 }
 
 .question-row:hover {
   border-color: var(--primary-tint, #FFE0C2);
   box-shadow: var(--shadow-card-hover, 0 8px 24px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.04));
   transform: translateY(-2px);
-  background: var(--bg-white, #ffffff);
 }
 
 .question-row:active {
@@ -34,11 +68,18 @@
   justify-content: center;
 }
 
+.q-thumb-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .q-title-cell {
   display: flex;
   align-items: center;
   gap: 12px;
   min-width: 0; /* allows text truncation */
+  padding-left: 12px;
 }
 
 .q-title-info {
@@ -51,13 +92,14 @@
 
 .q-title {
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: var(--text-primary, #1A1A1A);
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+  transition: color var(--transition);
 }
 
 .question-row:hover .q-title {
@@ -109,16 +151,16 @@
 
 .attempts-value {
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 1.05rem;
   color: var(--text-primary, #1A1A1A);
   font-variant-numeric: tabular-nums;
 }
 
 .attempts-label {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   color: var(--text-muted, #999999);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
 }
 
 @keyframes fadeIn {
@@ -128,11 +170,11 @@
 
 @media (max-width: 900px) {
   .question-row {
-    grid-template-columns: 36px minmax(0, 1fr) 90px;
+    grid-template-columns: 36px 70px minmax(0, 1fr) 90px;
     grid-template-rows: auto auto;
     grid-template-areas:
-      "status title attempts"
-      ". badges attempts";
+      "status thumb title attempts"
+      ". thumb badges attempts";
     gap: 10px 14px;
     padding: 16px;
     border-radius: var(--radius-md, 10px);
@@ -143,23 +185,30 @@
     grid-area: status;
   }
   
+  .q-thumb-cell {
+    grid-area: thumb;
+    justify-self: center;
+  }
+  
   .q-title-cell {
     grid-area: title;
+    padding-left: 0;
   }
   
   .q-title {
     white-space: normal; /* allow wrapping on mobile */
     overflow: visible;
     text-overflow: unset;
+    font-size: 0.95rem;
   }
   
   .q-badges-cell {
     display: flex;
     grid-area: badges;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
     flex-wrap: wrap;
-    margin-top: 2px;
+    margin-top: 4px;
   }
   
   .q-difficulty, .q-category {
@@ -179,5 +228,20 @@
     justify-self: end;
     align-self: center;
     align-items: flex-end; /* right align the text */
+  }
+}
+
+@media (max-width: 600px) {
+  .question-row {
+    grid-template-columns: 36px minmax(0, 1fr) 70px;
+    grid-template-areas:
+      "status title attempts"
+      ". thumb thumb"
+      ". badges badges";
+  }
+  .q-thumb-cell {
+    justify-self: start;
+    margin-top: 8px;
+    margin-bottom: 4px;
   }
 }

@@ -1,16 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiCheckCircle, FiSun, FiRefreshCw, FiArrowRight, FiXCircle, FiTrendingUp } from 'react-icons/fi';
+import { useAuth } from '../context/AuthContext';
 import './EvaluationCard.css';
 
 export default function EvaluationCard({ evaluation, questionId, onTryAgain }) {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { completeQuestion } = useAuth();
 
-  useState(() => {
-    const timer = setTimeout(() => setLoading(false), 2200);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+      // If the score is passing, mark it as completed automatically
+      if (evaluation.score >= 70) {
+        completeQuestion(questionId);
+      }
+    }, 2200);
     return () => clearTimeout(timer);
-  }, []);
+  }, [evaluation.score, questionId, completeQuestion]);
 
   if (loading) {
     return (

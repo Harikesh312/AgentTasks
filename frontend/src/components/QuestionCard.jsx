@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { FiAlertTriangle } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import QuestionStatus from './QuestionStatus';
+import QuestionThumbnail from './QuestionThumbnail';
 import './QuestionCard.css';
 
 export default function QuestionCard({ question, index }) {
@@ -11,16 +12,25 @@ export default function QuestionCard({ question, index }) {
   const solved = completedQuestions.includes(id);
 
   return (
-    <Link to={`/questions/${id}`} className="question-row" id={`question-${id}`} style={{ animationDelay: `${index * 0.05}s` }}>
+    <Link 
+      to={`/questions/${id}`} 
+      className={`question-row diff-${difficulty.toLowerCase()} ${solved ? 'completed-row' : ''}`} 
+      id={`question-${id}`} 
+      style={{ animationDelay: `${index * 0.03}s` }}
+    >
       <div className="q-status">
         <QuestionStatus solved={solved} />
       </div>
+      <div className="q-thumb-cell">
+        <QuestionThumbnail referenceImage={referenceImage} title={title} />
+      </div>
       <div className="q-title-cell">
-
         <div className="q-title-info">
           <span className="q-title">{title}</span>
           {isOptimizationTrap && (
-            <span className="badge badge-trap"><FiAlertTriangle size={12} /> Optimization Trap</span>
+            <span className="badge badge-trap" title="This agent may produce imperfect results first. Use follow-up prompts to guide it.">
+              <FiAlertTriangle size={12} /> Optimization Trap
+            </span>
           )}
         </div>
       </div>

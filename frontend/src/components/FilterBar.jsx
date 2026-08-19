@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { FiSearch } from 'react-icons/fi';
+import { useState, useMemo } from 'react';
+import { FiSearch, FiX } from 'react-icons/fi';
 import './FilterBar.css';
 
 const difficulties = ['All', 'Easy', 'Medium', 'Hard'];
@@ -18,19 +18,36 @@ export default function FilterBar({ onFilter }) {
     onFilter(newState);
   };
 
+  const handleClear = () => {
+    setSearch('');
+    setDifficulty('All');
+    setCategory('All');
+    onFilter({ search: '', difficulty: 'All', category: 'All' });
+  };
+
+  const hasActiveFilters = search !== '' || difficulty !== 'All' || category !== 'All';
+
   return (
     <div className="filter-bar" id="filter-bar">
-      <div className="search-wrapper">
-        <FiSearch className="search-icon" />
-        <input
-          type="text"
-          placeholder="Search questions..."
-          value={search}
-          onChange={(e) => handleChange('search', e.target.value)}
-          className="search-input"
-          id="search-input"
-        />
+      <div className="filter-header">
+        <div className="search-wrapper">
+          <FiSearch className="search-icon" />
+          <input
+            type="text"
+            placeholder="Search problems..."
+            value={search}
+            onChange={(e) => handleChange('search', e.target.value)}
+            className="search-input"
+            id="search-input"
+          />
+        </div>
+        {hasActiveFilters && (
+          <button className="btn-clear-filters" onClick={handleClear}>
+            <FiX size={14} /> Clear Filters
+          </button>
+        )}
       </div>
+      
       <div className="filter-chips-row">
         <div className="filter-group">
           <span className="filter-label">Difficulty</span>
