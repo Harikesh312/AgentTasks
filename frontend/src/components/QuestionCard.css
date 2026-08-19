@@ -1,6 +1,6 @@
 .question-row {
   display: grid;
-  grid-template-columns: 50px 1fr 100px 160px 100px;
+  grid-template-columns: 50px minmax(0, 1fr) 100px minmax(120px, 160px) 100px;
   align-items: center;
   padding: 18px 24px;
   background: var(--bg-white, #ffffff);
@@ -38,7 +38,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 0;
+  min-width: 0; /* allows text truncation */
 }
 
 .q-title-info {
@@ -64,8 +64,19 @@
   color: var(--primary, #FF6B35);
 }
 
+.q-badges-cell {
+  display: contents; /* keeps children in the main grid on desktop */
+}
+
 .q-difficulty { text-align: center; }
-.q-category { text-align: center; }
+
+.q-category { 
+  text-align: center; 
+  min-width: 0; /* essential for text-overflow to work in grid */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
 .category-tag {
   padding: 4px 12px;
@@ -76,6 +87,9 @@
   font-weight: 500;
   color: var(--text-secondary, #666666);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
   transition: all var(--transition);
 }
 
@@ -90,6 +104,7 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
+  flex-shrink: 0;
 }
 
 .attempts-value {
@@ -111,22 +126,58 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .question-row {
-    grid-template-columns: 36px 1fr;
-    grid-template-rows: auto;
-    gap: 10px;
-    padding: 14px 16px;
+    grid-template-columns: 36px minmax(0, 1fr) 90px;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "status title attempts"
+      ". badges attempts";
+    gap: 10px 14px;
+    padding: 16px;
     border-radius: var(--radius-md, 10px);
-  }
-  .q-difficulty, .q-category, .q-attempts { display: none; }
-  .q-title-cell {
-    flex-direction: row;
     align-items: center;
   }
+  
+  .q-status {
+    grid-area: status;
+  }
+  
+  .q-title-cell {
+    grid-area: title;
+  }
+  
   .q-title {
+    white-space: normal; /* allow wrapping on mobile */
+    overflow: visible;
+    text-overflow: unset;
+  }
+  
+  .q-badges-cell {
+    display: flex;
+    grid-area: badges;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 2px;
+  }
+  
+  .q-difficulty, .q-category {
+    text-align: left;
+    display: block;
+  }
+  
+  .category-tag {
     white-space: normal;
     overflow: visible;
     text-overflow: unset;
+    text-align: left;
+  }
+
+  .q-attempts {
+    grid-area: attempts;
+    justify-self: end;
+    align-self: center;
+    align-items: flex-end; /* right align the text */
   }
 }

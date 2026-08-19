@@ -24,11 +24,13 @@ export default function QuestionCard({ question, index }) {
           )}
         </div>
       </div>
-      <div className="q-difficulty">
-        <span className={`badge badge-${difficulty.toLowerCase()}`}>{difficulty}</span>
-      </div>
-      <div className="q-category">
-        <span className="category-tag">{category}</span>
+      <div className="q-badges-cell">
+        <div className="q-difficulty">
+          <span className={`badge badge-${difficulty.toLowerCase()}`}>{difficulty}</span>
+        </div>
+        <div className="q-category">
+          <span className="category-tag" title={category}>{category}</span>
+        </div>
       </div>
       <div className="q-attempts">
         <span className="attempts-value">{avgAttempts}</span>
