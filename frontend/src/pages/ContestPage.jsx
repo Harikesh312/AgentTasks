@@ -11,6 +11,10 @@ import {
   FiBarChart2,
   FiChevronRight,
   FiLayers,
+  FiChevronDown,
+  FiStar,
+  FiTrendingUp,
+  FiTarget,
 } from 'react-icons/fi';
 import { IoTrophyOutline } from 'react-icons/io5';
 import {
@@ -20,7 +24,6 @@ import {
   leaderboard as leaderboardData,
   badges as badgesData,
   userStats,
-  ratingHistory,
 } from '../data/contests';
 import './ContestPage.css';
 
@@ -77,8 +80,14 @@ function formatDate(iso) {
   }
 }
 
-/* ─── Categories ─── */
-const CATEGORIES = ['All', 'Weekly', 'Biweekly', 'Monthly', 'Beginner', 'Advanced', 'Completed'];
+/* ─── Filter tabs ─── */
+const FILTER_TABS = ['All', 'Live', 'Upcoming', 'Completed'];
+
+/* ─── Difficulty options ─── */
+const DIFFICULTY_OPTIONS = ['All Difficulties', 'Easy', 'Medium', 'Hard', 'Expert'];
+
+/* ─── Contest type options ─── */
+const TYPE_OPTIONS = ['All Types', 'Weekly', 'Biweekly', 'Monthly', 'Beginner', 'Advanced'];
 
 /* ─────────────────────────────────────────── */
 /*  ContestPage                                */
@@ -86,6 +95,8 @@ const CATEGORIES = ['All', 'Weekly', 'Biweekly', 'Monthly', 'Beginner', 'Advance
 export default function ContestPage() {
   const [activeTab, setActiveTab] = useState('All');
   const [search, setSearch] = useState('');
+  const [difficultyFilter, setDifficultyFilter] = useState('All Difficulties');
+  const [typeFilter, setTypeFilter] = useState('All Types');
   const [detailContest, setDetailContest] = useState(null);
 
   // Combine all contests for filtering
@@ -100,21 +111,36 @@ export default function ContestPage() {
   const filtered = useMemo(() => {
     let list = allContests;
 
-    if (activeTab === 'Completed') {
+    // Tab filter
+    if (activeTab === 'Live') {
+      list = list.filter((c) => c.status === 'live');
+    } else if (activeTab === 'Upcoming') {
+      list = list.filter((c) => c.status === 'upcoming');
+    } else if (activeTab === 'Completed') {
       list = list.filter((c) => c.status === 'completed');
-    } else if (activeTab !== 'All') {
-      list = list.filter((c) => c.type === activeTab && c.status !== 'completed');
-    } else {
-      list = list.filter((c) => c.status !== 'completed');
     }
+    // 'All' shows everything
 
+    // Search filter
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter((c) => (c.name || '').toLowerCase().includes(q));
     }
 
+    // Difficulty filter
+    if (difficultyFilter !== 'All Difficulties') {
+      list = list.filter((c) =>
+        (c.difficulty || '').toLowerCase().includes(difficultyFilter.toLowerCase())
+      );
+    }
+
+    // Type filter
+    if (typeFilter !== 'All Types') {
+      list = list.filter((c) => c.type === typeFilter);
+    }
+
     return list;
-  }, [allContests, activeTab, search]);
+  }, [allContests, activeTab, search, difficultyFilter, typeFilter]);
 
   // Next upcoming contest (first upcoming sorted by date)
   const nextContest = useMemo(() => {
@@ -129,6 +155,11 @@ export default function ContestPage() {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
+
+  // Top performers (top 5)
+  const topPerformers = useMemo(() => {
+    return (Array.isArray(leaderboardData) ? leaderboardData : []).slice(0, 5);
+  }, []);
 
   return (
     <div className="contest-page" id="contest-page">
@@ -152,10 +183,10 @@ export default function ContestPage() {
               Test your AI agent prompting skills against the community.
             </p>
             <div className="contest-hero-actions">
-              <button className="btn-primary btn-lg" onClick={() => scrollTo('upcoming-section')}>
+              <button className="btn-primary btn-lg" onClick={() => scrollTo('contests-section')}>
                 View Upcoming Contests <FiArrowRight size={16} />
               </button>
-              <button className="btn-outline btn-lg" onClick={() => scrollTo('leaderboard-section')}>
+              <button className="btn-outline btn-lg" onClick={() => scrollTo('top-performers-section')}>
                 View Leaderboard
               </button>
             </div>
@@ -170,17 +201,16 @@ export default function ContestPage() {
         </div>
       </section>
 
-      {/* ─── Next Contest Countdown ─── */}
-      {nextContest && <NextContestCard contest={nextContest} onViewDetails={setDetailContest} />}
-
       {/* ─── Live Now ─── */}
       {liveContestData && liveContestData.status === 'live' && (
         <LiveSection contest={liveContestData} onViewDetails={setDetailContest} />
       )}
 
-      {/* ─── Stats ─── */}
+      {/* ─── Next Contest Countdown ─── */}
+      {nextContest && <NextContestCard contest={nextContest} onViewDetails={setDetailContest} />}
+
+      {/* ─── Compact Stats ─── */}
       <section className="stats-section animate-fade" id="stats-section">
-        <h2 className="section-heading">Contest Statistics</h2>
         <div className="stats-grid">
           <div className="stat-card">
             <span className="stat-card-value">{userStats.rating}</span>
@@ -194,48 +224,66 @@ export default function ContestPage() {
             <span className="stat-card-value">{userStats.totalContests}</span>
             <span className="stat-card-label">Contests</span>
           </div>
-          <div className="stat-card">
-            <span className="stat-card-value">{userStats.problemsSolved}</span>
-            <span className="stat-card-label">Problems Solved</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-card-value">#{userStats.bestRank}</span>
-            <span className="stat-card-label">Best Rank</span>
-          </div>
-          <div className="stat-card">
-            <span className="stat-card-value">{userStats.badgesEarned}</span>
-            <span className="stat-card-label">Badges</span>
-          </div>
         </div>
       </section>
 
-      {/* ─── Filters & Search ─── */}
-      <section id="upcoming-section">
-        <h2 className="section-heading">Upcoming Contests</h2>
+      {/* ─── Contests Section with Filters ─── */}
+      <section id="contests-section">
+        <h2 className="section-heading">Contests</h2>
+
+        {/* Filter Bar */}
         <div className="contest-controls">
-          <div className="contest-tabs">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                className={`contest-tab ${activeTab === cat ? 'active' : ''}`}
-                onClick={() => setActiveTab(cat)}
-              >
-                {cat}
-              </button>
-            ))}
+          <div className="contest-controls-left">
+            <div className="contest-tabs">
+              {FILTER_TABS.map((tab) => (
+                <button
+                  key={tab}
+                  className={`contest-tab ${activeTab === tab ? 'active' : ''}`}
+                  onClick={() => setActiveTab(tab)}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="contest-search">
-            <FiSearch size={16} />
-            <input
-              type="text"
-              placeholder="Search contests..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+          <div className="contest-controls-right">
+            <div className="contest-search">
+              <FiSearch size={16} />
+              <input
+                type="text"
+                placeholder="Search contests..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="filter-select-wrapper">
+              <select
+                className="filter-select"
+                value={difficultyFilter}
+                onChange={(e) => setDifficultyFilter(e.target.value)}
+              >
+                {DIFFICULTY_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+              <FiChevronDown size={14} className="filter-select-icon" />
+            </div>
+            <div className="filter-select-wrapper">
+              <select
+                className="filter-select"
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+              >
+                {TYPE_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+              <FiChevronDown size={14} className="filter-select-icon" />
+            </div>
           </div>
         </div>
 
-        {/* ─── Contest Grid ─── */}
+        {/* Contest Grid */}
         <div className="contest-grid">
           {filtered.length === 0 ? (
             <div className="contest-empty animate-fade">
@@ -255,75 +303,6 @@ export default function ContestPage() {
         </div>
       </section>
 
-      {/* ─── Prizes & Rewards ─── */}
-      <PrizesSection />
-
-      {/* ─── Leaderboard ─── */}
-      <section className="leaderboard-section" id="leaderboard-section">
-        <h2 className="section-heading">Contest Leaderboard</h2>
-        <div className="leaderboard-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>User</th>
-                <th>Score</th>
-                <th>Solved</th>
-                <th>Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(Array.isArray(leaderboardData) ? leaderboardData : []).map((entry) => (
-                <tr key={entry.rank}>
-                  <td>
-                    <div className="rank-cell">
-                      {entry.rank === 1 && <span className="rank-medal rank-gold">🥇</span>}
-                      {entry.rank === 2 && <span className="rank-medal rank-silver">🥈</span>}
-                      {entry.rank === 3 && <span className="rank-medal rank-bronze">🥉</span>}
-                      #{entry.rank}
-                    </div>
-                  </td>
-                  <td className="user-cell">{entry.user}</td>
-                  <td className="score-cell">{entry.score.toLocaleString()}</td>
-                  <td>{entry.solved}</td>
-                  <td>{entry.time}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* ─── Badges ─── */}
-      <section className="badges-section" id="badges-section">
-        <h2 className="section-heading">Badges & Achievements</h2>
-        <div className="badges-grid">
-          {(Array.isArray(badgesData) ? badgesData : []).map((badge) => (
-            <div key={badge.id} className={`badge-card ${badge.unlocked ? '' : 'locked'} animate-fade`}>
-              <div className="badge-emoji">{badge.icon}</div>
-              <div className="badge-info">
-                <h4>{badge.name}</h4>
-                <p>{badge.description}</p>
-                <div className="badge-progress-bar">
-                  <div className="badge-progress-fill" style={{ width: `${badge.progress || 0}%` }} />
-                </div>
-                <span className={`badge-status ${badge.unlocked ? 'unlocked' : 'locked-text'}`}>
-                  {badge.unlocked ? '✓ Unlocked' : `${badge.progress || 0}% Progress`}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ─── Rating Progress ─── */}
-      <section className="rating-section">
-        <h2 className="section-heading">Rating Progress</h2>
-        <div className="rating-chart-container">
-          <RatingChart data={ratingHistory} />
-        </div>
-      </section>
-
       {/* ─── Past Contests ─── */}
       <section className="past-section">
         <h2 className="section-heading">Past Contests</h2>
@@ -337,7 +316,7 @@ export default function ContestPage() {
               <div className="past-card-stats">
                 <div className="past-stat">
                   <span className="past-stat-value">#{pc.userRank}</span>
-                  <span className="past-stat-label">Your Rank</span>
+                  <span className="past-stat-label">Rank</span>
                 </div>
                 <div className="past-stat">
                   <span className="past-stat-value">{pc.userScore}</span>
@@ -356,6 +335,56 @@ export default function ContestPage() {
               <button className="btn-outline" onClick={() => setDetailContest(pc)}>
                 View Results <FiChevronRight size={14} />
               </button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── Motivational Visual + Prizes ─── */}
+      <section className="contest-cta-section animate-fade">
+        <div className="contest-cta-inner">
+          <div className="contest-cta-content">
+            <FiTarget size={28} className="contest-cta-icon" />
+            <h2 className="contest-cta-title">Ready to compete?</h2>
+            <p className="contest-cta-text">
+              Compete with developers worldwide. Climb the leaderboard. Earn exclusive rewards.
+            </p>
+            <button className="btn-primary" onClick={() => scrollTo('contests-section')}>
+              Browse Contests <FiArrowRight size={14} />
+            </button>
+          </div>
+          <div className="contest-cta-visual">
+            <img
+              src="/contest-hero.jpg"
+              alt="Coding contest"
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Contest Prizes & Rewards ─── */}
+      <PrizesSection />
+
+      {/* ─── Top Performers ─── */}
+      <section className="top-performers-section" id="top-performers-section">
+        <div className="top-performers-header">
+          <h2 className="section-heading">Top Performers</h2>
+          <button className="btn-ghost btn-sm" onClick={() => scrollTo('top-performers-section')}>
+            View Full Leaderboard <FiChevronRight size={14} />
+          </button>
+        </div>
+        <div className="top-performers-list">
+          {topPerformers.map((entry) => (
+            <div key={entry.rank} className="performer-row">
+              <div className="performer-rank">
+                {entry.rank === 1 && <span className="rank-medal">🥇</span>}
+                {entry.rank === 2 && <span className="rank-medal">🥈</span>}
+                {entry.rank === 3 && <span className="rank-medal">🥉</span>}
+                {entry.rank > 3 && <span className="rank-number">#{entry.rank}</span>}
+              </div>
+              <span className="performer-name">{entry.user}</span>
+              <span className="performer-score">{entry.score.toLocaleString()}</span>
             </div>
           ))}
         </div>
@@ -440,15 +469,15 @@ function LiveSection({ contest, onViewDetails }) {
           <h3>{contest.name}</h3>
           <div className="live-card-meta">
             <span className="live-meta-tag"><FiClock size={14} /> {remaining}</span>
+            <span className="live-meta-tag"><FiClock size={14} /> {contest.duration}</span>
             <span className="live-meta-tag"><FiLayers size={14} /> {contest.problems} Problems</span>
             <span className="live-meta-tag"><FiUsers size={14} /> {contest.participants?.toLocaleString()}</span>
             <span className="live-meta-tag"><FiZap size={14} /> {contest.difficulty}</span>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <button className="btn-primary">Enter Contest <FiArrowRight size={14} /></button>
-          <button className="btn-outline" onClick={() => onViewDetails(contest)}>Details</button>
-        </div>
+        <button className="btn-primary" onClick={() => onViewDetails(contest)}>
+          Enter Contest <FiArrowRight size={14} />
+        </button>
       </div>
     </section>
   );
@@ -456,14 +485,17 @@ function LiveSection({ contest, onViewDetails }) {
 
 function ContestCard({ contest, index, onViewDetails }) {
   const isLive = contest.status === 'live';
+  const isCompleted = contest.status === 'completed';
 
   return (
     <div className="contest-card animate-fade" style={{ animationDelay: `${index * 0.05}s` }}>
       <div className="contest-card-top">
-        <div className="contest-card-icon">
-          {isLive ? <FiZap size={20} /> : <IoTrophyOutline size={20} />}
-        </div>
-        <span className="contest-type-badge">{contest.type || 'Contest'}</span>
+        <span className={`contest-status-badge ${
+          isLive ? 'status-live-badge' : isCompleted ? 'status-completed-badge' : 'status-upcoming-badge'
+        }`}>
+          {isLive ? '● Live' : isCompleted ? 'Completed' : contest.type || 'Upcoming'}
+        </span>
+        <span className="contest-difficulty">{contest.difficulty}</span>
       </div>
       <h3>{contest.name}</h3>
       <div className="contest-card-details">
@@ -473,9 +505,10 @@ function ContestCard({ contest, index, onViewDetails }) {
         <span className="contest-detail"><FiUsers size={14} /> {contest.participants?.toLocaleString()}</span>
       </div>
       <div className="contest-card-footer">
-        <span className="contest-difficulty">{contest.difficulty}</span>
         {isLive ? (
-          <button className="btn-primary">Enter <FiArrowRight size={14} /></button>
+          <button className="btn-primary" onClick={() => onViewDetails(contest)}>
+            Enter <FiArrowRight size={14} />
+          </button>
         ) : (
           <button className="btn-outline" onClick={() => onViewDetails(contest)}>
             View Details <FiChevronRight size={14} />
@@ -483,57 +516,6 @@ function ContestCard({ contest, index, onViewDetails }) {
         )}
       </div>
     </div>
-  );
-}
-
-function RatingChart({ data }) {
-  if (!Array.isArray(data) || data.length === 0) return null;
-
-  const padding = { top: 30, right: 30, bottom: 40, left: 20 };
-  const width = 600;
-  const height = 200;
-  const chartW = width - padding.left - padding.right;
-  const chartH = height - padding.top - padding.bottom;
-
-  const values = data.map((d) => d.rating);
-  const min = Math.min(...values) - 50;
-  const max = Math.max(...values) + 50;
-
-  const points = data.map((d, i) => {
-    const x = padding.left + (i / (data.length - 1)) * chartW;
-    const y = padding.top + chartH - ((d.rating - min) / (max - min)) * chartH;
-    return { x, y, ...d };
-  });
-
-  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
-  const areaPath = `${linePath} L${points[points.length - 1].x},${padding.top + chartH} L${points[0].x},${padding.top + chartH} Z`;
-
-  return (
-    <svg className="rating-chart" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
-      <defs>
-        <linearGradient id="ratingGradient" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.4" />
-          <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      {/* Grid lines */}
-      {[0, 0.25, 0.5, 0.75, 1].map((pct) => {
-        const y = padding.top + chartH * (1 - pct);
-        return <line key={pct} className="grid-line" x1={padding.left} y1={y} x2={padding.left + chartW} y2={y} />;
-      })}
-      {/* Area */}
-      <path className="chart-area" d={areaPath} />
-      {/* Line */}
-      <path className="chart-line" d={linePath} />
-      {/* Dots + labels */}
-      {points.map((p) => (
-        <g key={p.contest}>
-          <circle className="chart-dot" cx={p.x} cy={p.y} r={5} />
-          <text className="chart-value" x={p.x} y={p.y - 14}>{p.rating}</text>
-          <text className="chart-label" x={p.x} y={padding.top + chartH + 20}>{p.contest}</text>
-        </g>
-      ))}
-    </svg>
   );
 }
 
@@ -627,35 +609,49 @@ function ContestDetailModal({ contest, onClose }) {
 }
 
 function PrizesSection() {
+  const prizes = [
+    {
+      place: '1st Place',
+      reward: '$500 + Champion Badge',
+      description: 'Exclusive AgentPrep Champion Badge, 1-year Pro subscription, and $500 cash prize.',
+      tier: 'gold',
+      icon: <IoTrophyOutline size={28} />,
+    },
+    {
+      place: '2nd Place',
+      reward: '$250 + Elite Badge',
+      description: 'AgentPrep Elite Badge, 6-months Pro subscription, and $250 cash prize.',
+      tier: 'silver',
+      icon: <FiAward size={28} />,
+    },
+    {
+      place: '3rd Place',
+      reward: '$100 + Pro Badge',
+      description: 'AgentPrep Pro Badge, 3-months Pro subscription, and $100 cash prize.',
+      tier: 'bronze',
+      icon: <FiStar size={28} />,
+    },
+  ];
+
   return (
     <section className="prizes-section animate-fade" id="prizes-section">
-      <h2 className="section-heading">Contest Prizes & Rewards</h2>
+      <div className="prizes-section-header">
+        <h2 className="section-heading">Contest Prizes & Rewards</h2>
+        <p className="prizes-section-sub">Compete, climb the leaderboard, and earn exclusive rewards.</p>
+      </div>
       <div className="prizes-grid">
-        <div className="prize-card gold">
-          <div className="prize-image-wrapper">
-            <img src="/gold_trophy.jpg" alt="1st Place Gold Trophy" onError={(e) => { e.target.style.display = 'none'; }} />
+        {prizes.map((prize) => (
+          <div key={prize.place} className={`prize-card prize-${prize.tier}`}>
+            <div className={`prize-icon-wrapper prize-icon-${prize.tier}`}>
+              {prize.icon}
+            </div>
+            <h3 className="prize-place">{prize.place}</h3>
+            <div className="prize-reward">{prize.reward}</div>
+            <p className="prize-desc">{prize.description}</p>
           </div>
-          <h3 className="prize-title">1st Place</h3>
-          <div className="prize-reward">$500 + Champion Badge</div>
-          <p className="prize-desc">Exclusive AgentPrep Champion Badge, 1-year Pro subscription, and $500 cash prize.</p>
-        </div>
-        <div className="prize-card silver">
-          <div className="prize-image-wrapper">
-            <img src="/silver_medal.jpg" alt="2nd Place Silver Medal" onError={(e) => { e.target.style.display = 'none'; }} />
-          </div>
-          <h3 className="prize-title">2nd Place</h3>
-          <div className="prize-reward">$250 + Elite Badge</div>
-          <p className="prize-desc">AgentPrep Elite Badge, 6-months Pro subscription, and $250 cash prize.</p>
-        </div>
-        <div className="prize-card bronze">
-          <div className="prize-image-wrapper">
-            <img src="/bronze_medal.jpg" alt="3rd Place Bronze Medal" onError={(e) => { e.target.style.display = 'none'; }} />
-          </div>
-          <h3 className="prize-title">3rd Place</h3>
-          <div className="prize-reward">$100 + Pro Badge</div>
-          <p className="prize-desc">AgentPrep Pro Badge, 3-months Pro subscription, and $100 cash prize.</p>
-        </div>
+        ))}
       </div>
     </section>
   );
 }
+
