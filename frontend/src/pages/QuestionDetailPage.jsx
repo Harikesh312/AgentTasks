@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import {
-  FiMessageSquare, FiFolder, FiMonitor, FiSearch,
+  FiMessageSquare, FiFolder, FiMonitor,
   FiAlertTriangle, FiBarChart2, FiCheckCircle, FiX,
   FiClipboard, FiSettings, FiImage, FiCheck
 } from 'react-icons/fi';
@@ -12,7 +12,6 @@ import mockAgentRuns from '../data/mockAgentRuns';
 import PromptChat from '../components/PromptChat';
 import FileExplorer from '../components/FileExplorer';
 import PreviewPane from '../components/PreviewPane';
-import AgentTraceLog from '../components/AgentTraceLog';
 import EvaluationCard from '../components/EvaluationCard';
 import QuestionDiscussTab from '../components/QuestionDiscussTab';
 import './QuestionDetailPage.css';
@@ -25,7 +24,6 @@ export default function QuestionDetailPage() {
   const [activeTab, setActiveTab] = useState('chat');
   const [currentTurn, setCurrentTurn] = useState(0);
   const [currentFiles, setCurrentFiles] = useState(null);
-  const [currentTrace, setCurrentTrace] = useState(null);
   const [currentPreview, setCurrentPreview] = useState(null);
   const [showEval, setShowEval] = useState(false);
   const [evaluation, setEvaluation] = useState(null);
@@ -67,14 +65,24 @@ export default function QuestionDetailPage() {
     return <div className="qd-not-found"><h2>Question not found</h2></div>;
   }
 
-  const handleSendPrompt = useCallback((prompt, responseIdx) => {
-    const turn = agentRun.turns[responseIdx];
-    setCurrentFiles(turn.files);
-    setCurrentTrace(turn.trace);
-    setCurrentPreview(turn.preview);
+  // Build context string from question for the AI
+  const questionContext = `Build a component for: "${question.title}"\nDescription: ${question.description}\nRequirements:\n${question.requirements.map((r) => `- ${r}`).join('\n')}\nConstraints:\n${question.constraints.map((c) => `- ${c}`).join('\n')}`;
+
+  const handleAgentResponse = useCallback((prompt, responseData) => {
+    if (responseData.files) {
+      setCurrentFiles(responseData.files);
+    }
+    if (responseData.previewHtml) {
+      setCurrentPreview(responseData.previewHtml);
+    }
     setCurrentTurn((prev) => prev + 1);
-    setActiveTab('preview');
-  }, [agentRun]);
+    // Auto-switch to preview if we got one, otherwise files
+    if (responseData.previewHtml) {
+      setActiveTab('preview');
+    } else if (responseData.files) {
+      setActiveTab('files');
+    }
+  }, []);
 
   const handleDownload = async () => {
     if (!currentFiles) return;
@@ -98,7 +106,6 @@ export default function QuestionDetailPage() {
   const handleTryAgain = () => {
     setCurrentTurn(0);
     setCurrentFiles(null);
-    setCurrentTrace(null);
     setCurrentPreview(null);
     setShowEval(false);
     setEvaluation(null);
@@ -109,7 +116,6 @@ export default function QuestionDetailPage() {
     { key: 'chat', label: 'Prompt Chat', icon: <FiMessageSquare size={14} /> },
     { key: 'files', label: 'Files', icon: <FiFolder size={14} /> },
     { key: 'preview', label: 'Preview', icon: <FiMonitor size={14} /> },
-    { key: 'trace', label: 'Trace', icon: <FiSearch size={14} /> },
     { key: 'discuss', label: 'Discuss', icon: <FiMessageSquare size={14} /> },
   ];
 
@@ -214,10 +220,10 @@ export default function QuestionDetailPage() {
           <div className="qd-right-content">
             {activeTab === 'chat' && (
               <PromptChat
-                agentRun={agentRun}
                 currentTurn={currentTurn}
                 maxTurns={question.maxPromptTurns}
-                onSendPrompt={handleSendPrompt}
+                onAgentResponse={handleAgentResponse}
+                questionContext={questionContext}
               />
             )}
             {activeTab === 'files' && (
@@ -225,9 +231,6 @@ export default function QuestionDetailPage() {
             )}
             {activeTab === 'preview' && (
               <PreviewPane previewHtml={currentPreview} />
-            )}
-            {activeTab === 'trace' && (
-              <AgentTraceLog trace={currentTrace} />
             )}
             {activeTab === 'discuss' && (
               <QuestionDiscussTab
