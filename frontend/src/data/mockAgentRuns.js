@@ -46,21 +46,110 @@ const makeRun = (qId, isHard, keywords) => {
     },
   ];
 
-  const evalResult = (turnsUsed) => ({
-    score: isHard ? (turnsUsed <= 2 ? 84 : 72) : (turnsUsed <= 1 ? 95 : 88),
-    visualMatch: isHard ? (turnsUsed <= 2 ? 88 : 78) : 92,
-    codeOptimization: isHard ? (turnsUsed <= 2 ? 75 : 60) : 90,
-    promptEfficiency: Math.max(40, 100 - (turnsUsed - 1) * 21),
-    feedback: isHard
-      ? turnsUsed <= 2
-        ? "Good recovery. You identified the responsiveness issue and fixed it in a follow-up prompt. Try specifying breakpoints upfront next time to save a turn."
-        : "The output improved but took too many turns. Be more specific about responsive requirements in your initial prompt."
-      : turnsUsed <= 1
-        ? "Excellent first prompt! You covered all requirements clearly and the agent nailed it on the first try."
-        : "Good result. Your follow-up refined the output nicely. Consider including more detail in your initial prompt.",
-  });
+  const evaluateOutput = (question, currentFiles, turnsUsed) => {
+    let combinedHtml = "";
+    if (currentFiles) {
+      Object.values(currentFiles).forEach(content => {
+        combinedHtml += content.toLowerCase();
+      });
+    }
 
-  return { turns, keywords: keywords || ["responsive", "optimize", "fix", "breakpoint", "grid", "media query", "fluid", "improve", "refactor", "pagination", "virtualize", "lazy"], evalResult };
+    const matchedPoints = [];
+    const improvementPoints = [];
+    let coverageScore = 0;
+
+    // Check requiredContent if available
+    if (question.requiredContent && Object.keys(question.requiredContent).length > 0) {
+      let matchedCount = 0;
+      const totalRequired = Object.keys(question.requiredContent).length;
+
+      Object.entries(question.requiredContent).forEach(([key, expectedText]) => {
+        // Strip whitespace and lower to do substring check
+        const normalizedExpected = expectedText.toLowerCase().replace(/\s+/g, ' ').trim();
+        const normalizedHtml = combinedHtml.replace(/\s+/g, ' ');
+
+        if (normalizedHtml.includes(normalizedExpected)) {
+          matchedPoints.push(`The ${key} matches the target text exactly.`);
+          matchedCount++;
+        } else {
+          improvementPoints.push(`The ${key} text differs from target — expected "${expectedText}".`);
+        }
+      });
+      coverageScore = Math.round((matchedCount / totalRequired) * 100);
+    } else {
+      // Fallback heuristics if no explicit requiredContent
+      let matchedCount = 0;
+      question.requirements.forEach(req => {
+        const keywords = req.toLowerCase().split(' ').filter(w => w.length > 4);
+        if (keywords.some(kw => combinedHtml.includes(kw))) {
+          matchedCount++;
+        }
+      });
+      coverageScore = Math.max(50, Math.round((matchedCount / question.requirements.length) * 100));
+      if (coverageScore > 80) {
+         matchedPoints.push("Most requirements seem to be implemented.");
+      } else {
+         improvementPoints.push("Several functional requirements appear to be missing.");
+      }
+    }
+
+    // Heuristics
+    // Responsiveness: presence of @media, clamp, or flex/grid
+    const hasMedia = combinedHtml.includes('@media') || combinedHtml.includes('clamp(');
+    const isResponsive = hasMedia || combinedHtml.includes('flex-wrap') || combinedHtml.includes('grid-template');
+    const responsiveness = isResponsive ? (turnsUsed <= 1 ? 95 : 85) : 40;
+
+    if (isResponsive) {
+      matchedPoints.push("Output includes responsive design techniques (e.g. media queries, flex/grid).");
+    } else {
+      improvementPoints.push("Missing media queries or fluid layouts for responsiveness.");
+    }
+
+    // Functionality: check for typical interactive elements if implied
+    const hasButtons = combinedHtml.includes('<button') || combinedHtml.includes('<a ');
+    const functionality = hasButtons ? 90 : 60;
+    
+    // Code quality
+    const hasSemantic = combinedHtml.includes('<header') || combinedHtml.includes('<section') || combinedHtml.includes('<main') || combinedHtml.includes('<nav');
+    const codeOptimization = hasSemantic ? 88 : 70;
+
+    if (hasSemantic) {
+      matchedPoints.push("Good use of semantic HTML tags.");
+    }
+
+    // Visual Match: rough heuristic based on coverage and responsiveness
+    const visualMatch = Math.round((coverageScore * 0.6) + (responsiveness * 0.4));
+    
+    // Prompt Efficiency
+    const promptEfficiency = Math.max(40, 100 - (turnsUsed - 1) * 15);
+
+    // Score
+    const score = Math.round((coverageScore * 0.3) + (visualMatch * 0.3) + (responsiveness * 0.15) + (codeOptimization * 0.1) + (functionality * 0.15));
+
+    let feedback = "";
+    if (score >= 90) {
+      feedback = "Excellent work! The agent perfectly nailed the prompt on the first or second try.";
+    } else if (score >= 70) {
+      feedback = "Good result. " + (improvementPoints[0] || "Consider refining your prompt for a perfect match.");
+    } else {
+      feedback = "The output missed key requirements. " + (improvementPoints[0] || "Try being more explicit about the layout and text in your prompt.");
+    }
+
+    return {
+      score,
+      visualMatch,
+      codeOptimization,
+      promptEfficiency,
+      requirementCoverage: coverageScore,
+      functionality,
+      responsiveness,
+      matchedPoints,
+      improvementPoints,
+      feedback
+    };
+  };
+
+  return { turns, keywords: keywords || ["responsive", "optimize", "fix", "breakpoint", "grid", "media query", "fluid", "improve", "refactor", "pagination", "virtualize", "lazy"], evaluateOutput };
 };
 
 const mockAgentRuns = {

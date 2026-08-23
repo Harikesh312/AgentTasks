@@ -36,7 +36,8 @@ RULES:
 9. Use semantic HTML5 elements
 10. The JSON must be valid — escape all special characters properly in strings
 11. Do NOT include markdown code fences in your response — just the raw JSON object
-12. Do NOT add any text before or after the JSON object`;
+12. Do NOT add any text before or after the JSON object
+13. If the user's context specifies exact required text in quotes (e.g. Headline, Subtext, CTA button text), you MUST reproduce that text exactly and verbatim — same wording, same capitalization, same punctuation. Do NOT paraphrase, rewrite, shorten, or invent alternative copy for any text that is explicitly required. Only change required text if the user's latest prompt explicitly asks you to change that specific piece of text.`;
 
 const model = genAI.getGenerativeModel({
   model: 'gemini-3.1-flash-lite',

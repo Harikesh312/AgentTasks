@@ -1,26 +1,99 @@
 import { useState } from 'react';
-import { FiFolder, FiFile, FiDownload, FiCode, FiFileText, FiHash, FiTerminal } from 'react-icons/fi';
+import { FiFolder, FiFile, FiDownload, FiCode, FiFileText, FiHash, FiTerminal, FiEye, FiCheckCircle, FiMessageSquare, FiArrowRight, FiArrowLeft, FiArrowDown } from 'react-icons/fi';
 import CodeViewer from './CodeViewer';
 import './FileExplorer.css';
 
 const fileIcons = {
-  html: <FiCode size={14} color="#e44d26" />,
-  css: <FiHash size={14} color="#264de4" />,
-  js: <FiTerminal size={14} color="#f7df1e" />,
-  json: <FiFileText size={14} />,
-  default: <FiFile size={14} />,
+  html: <FiCode size={18} color="#e44d26" />,
+  css: <FiHash size={18} color="#264de4" />,
+  js: <FiTerminal size={18} color="#f7df1e" />,
+  json: <FiFileText size={18} color="#000000" />,
+  default: <FiFile size={18} color="#64748b" />,
 };
 
-export default function FileExplorer({ files, onDownload }) {
+const getFileType = (ext) => {
+  const types = { html: 'HTML Document', css: 'Stylesheet', js: 'JavaScript', json: 'JSON Data' };
+  return types[ext] || 'File';
+};
+
+const formatSize = (content) => {
+  const bytes = new Blob([content]).size;
+  if (bytes < 1024) return bytes + ' B';
+  return (bytes / 1024).toFixed(1) + ' KB';
+};
+
+export default function FileExplorer({ files, onDownload, onGoToChat, onOpenPreview, previewHtml }) {
   const [selectedFile, setSelectedFile] = useState(null);
 
   if (!files || Object.keys(files).length === 0) {
     return (
-      <div className="file-explorer-empty">
-        <div className="files-empty">
-          <FiFolder className="files-empty-icon" size={40} />
-          <p>No files generated yet</p>
-          <p className="files-empty-hint">Send a prompt to the agent to generate files</p>
+      <div className="fe-container" id="file-explorer-empty">
+        <div className="fe-header-section">
+          <div className="fe-header-titles">
+            <h3 className="fe-heading">Files</h3>
+            <p className="fe-subtitle">Reference assets and generated files</p>
+          </div>
+        </div>
+        
+        <div className="fe-empty-state-compact">
+          <div className="fe-empty-icon-wrapper-small">
+            <FiFolder size={32} />
+          </div>
+          <div className="fe-empty-text-compact">
+            <h3 className="fe-empty-title-compact">No files generated yet</h3>
+            <p className="fe-empty-desc-compact">Send a prompt in the chat to generate the files.</p>
+          </div>
+          <button className="btn-primary" onClick={onGoToChat}>
+            Go to Prompt Chat <FiArrowRight size={16} style={{marginLeft: '4px'}} />
+          </button>
+        </div>
+
+        <div className="fe-files-preview-section">
+          <h4 className="fe-files-preview-title">Files you'll receive</h4>
+          <div className="fe-placeholder-timeline">
+            {/* HTML */}
+            <div className="fe-timeline-step">
+              <div className="fe-placeholder-card">
+                <div className="fe-placeholder-icon">
+                  <FiCode size={20} color="#e44d26" />
+                </div>
+                <div className="fe-placeholder-info">
+                  <span className="fe-placeholder-name">index.html</span>
+                  <span className="fe-placeholder-desc">Structure & markup</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="fe-timeline-arrow"><FiArrowDown size={16} color="#cbd5e1" /></div>
+            
+            {/* CSS */}
+            <div className="fe-timeline-step">
+              <div className="fe-placeholder-card">
+                <div className="fe-placeholder-icon">
+                  <FiHash size={20} color="#264de4" />
+                </div>
+                <div className="fe-placeholder-info">
+                  <span className="fe-placeholder-name">styles.css</span>
+                  <span className="fe-placeholder-desc">Styling & responsive</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="fe-timeline-arrow"><FiArrowDown size={16} color="#cbd5e1" /></div>
+
+            {/* JS */}
+            <div className="fe-timeline-step">
+              <div className="fe-placeholder-card">
+                <div className="fe-placeholder-icon">
+                  <FiTerminal size={20} color="#f7df1e" />
+                </div>
+                <div className="fe-placeholder-info">
+                  <span className="fe-placeholder-name">script.js</span>
+                  <span className="fe-placeholder-desc">Interactions & behavior</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -30,38 +103,76 @@ export default function FileExplorer({ files, onDownload }) {
   const ext = (name) => name.split('.').pop();
 
   return (
-    <div className="file-explorer" id="file-explorer">
-      <div className="fe-header">
-        <span className="fe-title"><FiFolder size={15} /> Generated Files</span>
-        <button className="btn-primary btn-sm" onClick={onDownload} id="download-btn">
-          <FiDownload size={14} /> Download All
+    <div className="fe-container" id="file-explorer">
+      <div className="fe-header-section">
+        <div className="fe-header-titles">
+          <h3 className="fe-heading">Files</h3>
+          <p className="fe-subtitle">Reference assets and generated files</p>
+        </div>
+        <button className="btn-primary pe-btn-premium" onClick={onDownload} id="download-btn">
+          <FiDownload size={16} /> Download All
         </button>
       </div>
-      <div className="fe-body">
-        <div className="file-list">
-          {fileNames.map((name, i) => (
-            <button
-              key={name}
-              className={`file-item ${selectedFile === name ? 'active' : ''}`}
-              onClick={() => setSelectedFile(name)}
-              style={{ animationDelay: `${i * 0.1}s` }}
-            >
-              <span className="file-icon">{fileIcons[ext(name)] || fileIcons.default}</span>
-              <span className="file-name">{name}</span>
-            </button>
-          ))}
-        </div>
-        <div className="code-area">
-          {selectedFile ? (
-            <CodeViewer code={files[selectedFile]} fileName={selectedFile} />
-          ) : (
-            <div className="code-placeholder">
-              <FiCode size={24} />
-              <p>Select a file to view its code</p>
+      
+      {!selectedFile ? (
+        <div className="fe-overview-state">
+          <div className="fe-timeline">
+            {['index.html', 'styles.css', 'script.js'].map((name, i) => {
+              if (!files[name]) return null;
+              const extension = ext(name);
+              return (
+                <div className="fe-timeline-step" key={name}>
+                  {i > 0 && <div className="fe-timeline-arrow"><FiArrowRight size={16} color="#94a3b8" /></div>}
+                  <button className="fe-timeline-card" onClick={() => setSelectedFile(name)}>
+                    <div className="fe-timeline-icon">
+                      {fileIcons[extension] || fileIcons.default}
+                    </div>
+                    <div className="fe-timeline-info">
+                      <span className="fe-timeline-name">{name}</span>
+                      <span className="fe-timeline-meta">{formatSize(files[name])}</span>
+                    </div>
+                    <div className="fe-timeline-action">
+                      <FiEye size={14} /> View
+                    </div>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          
+          {previewHtml && (
+            <div className="fe-generated-card-compact">
+              <div className="fe-generated-header">
+                <FiCheckCircle size={20} color="#10b981" />
+                <h4>Output Generated Successfully</h4>
+              </div>
+              <div className="fe-generated-preview-compact">
+                <iframe srcDoc={previewHtml} title="Preview" sandbox="allow-scripts" frameBorder="0" scrolling="no" />
+              </div>
+              <div className="fe-generated-footer">
+                <button className="btn-primary pe-btn-premium" onClick={onOpenPreview}>
+                  <FiEye size={16} style={{marginRight: '8px'}} /> Open Full Preview
+                </button>
+              </div>
             </div>
           )}
         </div>
-      </div>
+      ) : (
+        <div className="fe-code-view-state">
+          <div className="fe-code-view-header">
+            <button className="fe-back-btn" onClick={() => setSelectedFile(null)}>
+              <FiArrowLeft size={16} /> Back to Overview
+            </button>
+            <div className="fe-code-file-info">
+              {fileIcons[ext(selectedFile)]}
+              <span>{selectedFile}</span>
+            </div>
+          </div>
+          <div className="fe-code-wrapper">
+            <CodeViewer code={files[selectedFile]} fileName={selectedFile} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { FiUser, FiCpu, FiSend, FiMessageSquare, FiCode, FiFile, FiChevronDown, FiChevronRight, FiCopy, FiCheck, FiSearch, FiLayout, FiZap, FiFolder, FiCheckCircle, FiAlertTriangle } from 'react-icons/fi';
 import ReactMarkdown from 'react-markdown';
+import { useAuth } from '../context/AuthContext';
 import './PromptChat.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -44,44 +45,30 @@ const PHASE_CONFIG = {
   },
 };
 
-function CodeBlock({ code, fileName }) {
-  const [collapsed, setCollapsed] = useState(true);
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(code);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
+function FileCard({ fileName, code, onOpen }) {
   const lineCount = code.split('\n').length;
-  const previewLines = code.split('\n').slice(0, 4).join('\n');
-
+  
+  // Basic icon mapping
+  const ext = fileName.split('.').pop();
+  let Icon = FiFile;
+  let color = '#64748b';
+  
+  if (ext === 'html') { Icon = FiCode; color = '#e44d26'; }
+  if (ext === 'css') { Icon = FiCode; color = '#264de4'; } // FiHash equivalent
+  if (ext === 'js') { Icon = FiCode; color = '#f7df1e'; } // FiTerminal equivalent
+  
   return (
-    <div className="inline-code-block">
-      <div className="code-block-header" onClick={() => setCollapsed(!collapsed)}>
-        <div className="code-block-file">
-          <FiFile size={13} />
-          <span>{fileName}</span>
-          <span className="code-block-lines">{lineCount} lines</span>
-        </div>
-        <div className="code-block-actions">
-          <button className="code-copy-btn" onClick={(e) => { e.stopPropagation(); handleCopy(); }}>
-            {copied ? <FiCheck size={13} /> : <FiCopy size={13} />}
-          </button>
-          {collapsed ? <FiChevronRight size={14} /> : <FiChevronDown size={14} />}
-        </div>
+    <div className="chat-file-card" onClick={onOpen}>
+      <div className="chat-file-icon" style={{ color }}>
+        <Icon size={18} />
       </div>
-      {!collapsed && (
-        <pre className="code-block-body">
-          <code>{code}</code>
-        </pre>
-      )}
-      {collapsed && (
-        <pre className="code-block-preview">
-          <code>{previewLines}...</code>
-        </pre>
-      )}
+      <div className="chat-file-info">
+        <span className="chat-file-name">{fileName}</span>
+        <span className="chat-file-meta">{lineCount} lines</span>
+      </div>
+      <div className="chat-file-action">
+        <FiChevronRight size={16} />
+      </div>
     </div>
   );
 }
@@ -121,7 +108,7 @@ function StreamingText({ text }) {
   );
 }
 
-export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, questionContext }) {
+export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, questionContext, onOpenPreview, onOpenFile }) {
   const { user, memoryToken } = useAuth();
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
@@ -353,15 +340,53 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
               <div className="bubble-text markdown-body">
                 <ReactMarkdown>{msg.content}</ReactMarkdown>
               </div>
+              
+              {msg.previewHtml && (
+                <div className="generation-result-card">
+                  <div className="result-card-header">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <FiCheckCircle size={16} className="success-icon" />
+                      <span style={{ fontWeight: 700 }}>Agent successfully generated output</span>
+                    </div>
+                  </div>
+                  <div className="result-card-thumbnail-large">
+                    <div className="thumbnail-browser-bar">
+                      <div className="thumbnail-dots">
+                        <span style={{background:'#ef4444'}}></span>
+                        <span style={{background:'#f59e0b'}}></span>
+                        <span style={{background:'#10b981'}}></span>
+                      </div>
+                      <div className="thumbnail-url">localhost:3000</div>
+                    </div>
+                    <div className="thumbnail-iframe-wrapper">
+                      <iframe
+                        srcDoc={msg.previewHtml}
+                        sandbox="allow-scripts allow-same-origin"
+                        scrolling="no"
+                        title="Preview Thumbnail"
+                        className="thumbnail-iframe-large"
+                      />
+                    </div>
+                  </div>
+                  <div className="result-card-actions">
+                    <button className="btn-primary open-preview-btn-large" onClick={onOpenPreview}>
+                      Open Preview
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {msg.files && Object.keys(msg.files).length > 0 && (
-                <div className="bubble-files">
+                <div className="bubble-files-container">
                   <div className="files-created-label">
-                    <FiCode size={13} />
+                    <FiCode size={14} />
                     <span>{Object.keys(msg.files).length} files generated</span>
                   </div>
-                  {Object.entries(msg.files).map(([fileName, code]) => (
-                    <CodeBlock key={fileName} code={code} fileName={fileName} />
-                  ))}
+                  <div className="chat-files-list">
+                    {Object.entries(msg.files).map(([fileName, code]) => (
+                      <FileCard key={fileName} code={code} fileName={fileName} onOpen={onOpenFile} />
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import agentRoutes from './routes/agent.js';
+import discussRoutes from './routes/discuss.js';
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/agent', agentRoutes);
+app.use('/api/discuss', discussRoutes);
 
 // Database Connection
 mongoose
@@ -40,3 +42,4 @@ mongoose
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Trigger restart

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiHexagon, FiUser, FiLogOut, FiMenu, FiX, FiChevronDown, FiUsers, FiGrid } from 'react-icons/fi';
+import { FiHexagon, FiUser, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
 import './Navbar.css';
 
 export default function Navbar() {
@@ -27,7 +27,10 @@ export default function Navbar() {
     return null;
   }
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => {
+    if (path === '/') return location.pathname === '/';
+    return location.pathname.startsWith(path);
+  };
 
   return (
     <nav className="navbar" id="main-navbar">
@@ -49,20 +52,6 @@ export default function Navbar() {
           {isLoggedIn && (
             <Link to="/profile" className={`nav-link ${isActive('/profile') ? 'active' : ''}`}>Profile</Link>
           )}
-          
-          <div className="nav-dropdown-container">
-            <span className="nav-link nav-dropdown-trigger">
-              Interview <FiChevronDown size={18} />
-            </span>
-            <div className="nav-dropdown-menu">
-              <Link to="" className="nav-dropdown-item">
-                <FiUsers className="icon-blue" size={20} /> Online Interview
-              </Link>
-              <Link to="" className="nav-dropdown-item">
-                <FiGrid className="icon-blue" size={20} /> Assessment
-              </Link>
-            </div>
-          </div>
         </div>
 
         <div className="navbar-actions">

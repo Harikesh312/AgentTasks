@@ -21,6 +21,11 @@ const questions = [
       "Use semantic HTML elements",
       "No external CSS frameworks",
     ],
+    requiredContent: {
+      headline: "Build the Future Faster",
+      subtext: "Ship your product in days, not months. The most powerful SaaS boilerplate.",
+      cta: "Get Started"
+    },
     maxPromptTurns: 5,
   },
   {
@@ -45,6 +50,14 @@ const questions = [
       "Responsive: cards stack on mobile",
       "Use CSS Grid or Flexbox for layout",
     ],
+    requiredContent: {
+      headline: "Simple, transparent pricing",
+      monthly: "Monthly",
+      annually: "Annually",
+      freePlan: "Free",
+      proPlan: "Professional",
+      enterprisePlan: "Enterprise"
+    },
     maxPromptTurns: 5,
   },
   {
@@ -117,6 +130,14 @@ const questions = [
       "Pure CSS for mobile menu animation (no JS toggle library)",
       "Must work on screens 320px and up",
     ],
+    requiredContent: {
+      brand: "Brand",
+      home: "Home",
+      features: "Features",
+      pricing: "Pricing",
+      contact: "Contact",
+      cta: "Sign Up"
+    },
     maxPromptTurns: 5,
   },
   {

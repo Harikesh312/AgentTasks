@@ -1,10 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
-import { FiMonitor, FiSmartphone, FiZap, FiRefreshCw } from 'react-icons/fi';
+import { FiMonitor, FiSmartphone, FiTablet, FiZap, FiRefreshCw } from 'react-icons/fi';
 import './PreviewPane.css';
 
-export default function PreviewPane({ previewHtml }) {
-  const [device, setDevice] = useState('desktop');
+export default function PreviewPane({ previewHtml, deviceOverride, onDeviceChange }) {
+  const [internalDevice, setInternalDevice] = useState('desktop');
+  const device = deviceOverride || internalDevice;
   const iframeRef = useRef(null);
+
+  const handleDeviceChange = (d) => {
+    setInternalDevice(d);
+    if (onDeviceChange) onDeviceChange(d);
+  };
 
   useEffect(() => {
     if (iframeRef.current && previewHtml) {
@@ -39,14 +45,21 @@ export default function PreviewPane({ previewHtml }) {
           <div className="device-toggle">
             <button
               className={`device-btn ${device === 'desktop' ? 'active' : ''}`}
-              onClick={() => setDevice('desktop')}
+              onClick={() => handleDeviceChange('desktop')}
               title="Desktop"
             >
               <FiMonitor size={16} />
             </button>
             <button
+              className={`device-btn ${device === 'tablet' ? 'active' : ''}`}
+              onClick={() => handleDeviceChange('tablet')}
+              title="Tablet"
+            >
+              <FiTablet size={16} />
+            </button>
+            <button
               className={`device-btn ${device === 'mobile' ? 'active' : ''}`}
-              onClick={() => setDevice('mobile')}
+              onClick={() => handleDeviceChange('mobile')}
               title="Mobile"
             >
               <FiSmartphone size={16} />
