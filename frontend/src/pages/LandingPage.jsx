@@ -33,7 +33,7 @@ export default function LandingPage() {
           <div className="shape shape-3" />
         </div>
         <div className="hero-content animate-slide">
-          <div className="hero-badge"><FiCpu size={16} /> AI Agent Interview Prep</div>
+          <div className="hero-badge"><FiCpu size={20} /> AI Agent Interview Prep</div>
           <h1 className="hero-title">
             Practice AI Agent Interviews.
             <br />
@@ -46,7 +46,7 @@ export default function LandingPage() {
           </p>
           <div className="hero-actions">
             <Link to="/questions" className="btn-primary btn-lg">
-              Browse Questions <FiArrowRight size={16} />
+              Browse Questions <FiArrowRight size={20} />
             </Link>
             {isLoggedIn ? (
               <Link to="/profile" className="btn-outline btn-lg">
@@ -64,7 +64,7 @@ export default function LandingPage() {
       <section className="landing-stats-section animate-on-scroll fade-up">
         <div className="stats-container">
           <div className="stat-item">
-            <div className="stat-icon-wrapper"><FiFileText className="stat-icon" /></div>
+            <div className="stat-icon-wrapper icon-orange"><FiFileText size={28} /></div>
             <div className="stat-content">
               <span className="stat-number">50+</span>
               <span className="stat-label">Questions</span>
@@ -73,7 +73,7 @@ export default function LandingPage() {
           </div>
           <div className="stat-divider" />
           <div className="stat-item">
-            <div className="stat-icon-wrapper"><FiTarget className="stat-icon" /></div>
+            <div className="stat-icon-wrapper icon-purple"><FiTarget size={28} /></div>
             <div className="stat-content">
               <span className="stat-number">82%</span>
               <span className="stat-label">Avg. Score</span>
@@ -81,7 +81,7 @@ export default function LandingPage() {
           </div>
           <div className="stat-divider" />
           <div className="stat-item">
-            <div className="stat-icon-wrapper"><FiUsers className="stat-icon" /></div>
+            <div className="stat-icon-wrapper icon-green"><FiUsers size={28} /></div>
             <div className="stat-content">
               <span className="stat-number">1.2K</span>
               <span className="stat-label">Active Learners</span>
@@ -134,9 +134,9 @@ export default function LandingPage() {
           <h2>Ready to test your prompting skills?</h2>
           <p>Join thousands of developers mastering AI agent orchestration.</p>
           {isLoggedIn ? (
-            <Link to="/questions" className="btn-primary btn-lg">Get Started <FiArrowRight size={16} /></Link>
+            <Link to="/questions" className="btn-primary btn-lg">Get Started <FiArrowRight size={20} /></Link>
           ) : (
-            <Link to="/signup" className="btn-primary btn-lg">Sign Up Free <FiArrowRight size={16} /></Link>
+            <Link to="/signup" className="btn-primary btn-lg">Sign Up Free <FiArrowRight size={20} /></Link>
           )}
         </div>
       </section>

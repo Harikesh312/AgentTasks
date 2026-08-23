@@ -52,14 +52,14 @@ export default function Navbar() {
           
           <div className="nav-dropdown-container">
             <span className="nav-link nav-dropdown-trigger">
-              Interview <FiChevronDown size={14} />
+              Interview <FiChevronDown size={18} />
             </span>
             <div className="nav-dropdown-menu">
               <Link to="" className="nav-dropdown-item">
-                <FiUsers className="icon-blue" size={16} /> Online Interview
+                <FiUsers className="icon-blue" size={20} /> Online Interview
               </Link>
               <Link to="" className="nav-dropdown-item">
-                <FiGrid className="icon-blue" size={16} /> Assessment
+                <FiGrid className="icon-blue" size={20} /> Assessment
               </Link>
             </div>
           </div>
@@ -74,10 +74,10 @@ export default function Navbar() {
               {dropdownOpen && (
                 <div className="dropdown-menu animate-fade">
                   <Link to="/profile" className="dropdown-item" onClick={() => setDropdownOpen(false)}>
-                    <FiUser size={16} /> Profile
+                    <FiUser size={20} /> Profile
                   </Link>
                   <button className="dropdown-item" onClick={() => { logout(); setDropdownOpen(false); }}>
-                    <FiLogOut size={16} /> Logout
+                    <FiLogOut size={20} /> Logout
                   </button>
                 </div>
               )}

@@ -33,7 +33,7 @@
   left: 16px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 1rem;
+  font-size: 1.25rem;
   color: var(--text-muted, #999999);
   transition: color var(--transition);
   pointer-events: none;

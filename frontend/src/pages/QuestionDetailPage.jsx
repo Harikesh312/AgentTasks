@@ -113,10 +113,10 @@ export default function QuestionDetailPage() {
   };
 
   const tabs = [
-    { key: 'chat', label: 'Prompt Chat', icon: <FiMessageSquare size={14} /> },
-    { key: 'files', label: 'Files', icon: <FiFolder size={14} /> },
-    { key: 'preview', label: 'Preview', icon: <FiMonitor size={14} /> },
-    { key: 'discuss', label: 'Discuss', icon: <FiMessageSquare size={14} /> },
+    { key: 'chat', label: 'Prompt Chat', icon: <FiMessageSquare size={18} /> },
+    { key: 'files', label: 'Files', icon: <FiFolder size={18} /> },
+    { key: 'preview', label: 'Preview', icon: <FiMonitor size={18} /> },
+    { key: 'discuss', label: 'Discuss', icon: <FiMessageSquare size={18} /> },
   ];
 
   return (
@@ -151,7 +151,7 @@ export default function QuestionDetailPage() {
 
             {/* Reference image */}
             <div className="qd-section">
-              <h3 className="qd-section-title"><FiImage size={14} /> Target Design</h3>
+              <h3 className="qd-section-title"><FiImage size={18} /> Target Design</h3>
               {question.referenceImage ? (
                 <div className="qd-ref-image-container" style={{ marginTop: '12px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)' }}>
                   <img src={question.referenceImage} alt="Reference Design" style={{ width: '100%', display: 'block', objectFit: 'contain' }} />
@@ -166,7 +166,7 @@ export default function QuestionDetailPage() {
 
             {/* Requirements */}
             <div className="qd-section">
-              <h3 className="qd-section-title"><FiClipboard size={14} /> Requirements</h3>
+              <h3 className="qd-section-title"><FiClipboard size={18} /> Requirements</h3>
               <ul className="qd-req-list">
                 {question.requirements.map((req, i) => (
                   <li key={i}><FiCheck size={13} className="req-check" /> {req}</li>
@@ -176,7 +176,7 @@ export default function QuestionDetailPage() {
 
             {/* Constraints */}
             <div className="qd-section">
-              <h3 className="qd-section-title"><FiSettings size={14} /> Constraints</h3>
+              <h3 className="qd-section-title"><FiSettings size={18} /> Constraints</h3>
               <ul className="qd-req-list constraints">
                 {question.constraints.map((c, i) => (
                   <li key={i}><span className="constraint-dot">•</span> {c}</li>
@@ -212,7 +212,7 @@ export default function QuestionDetailPage() {
               disabled={!currentFiles}
               id="submit-eval-btn"
             >
-              <FiBarChart2 size={14} /> Submit
+              <FiBarChart2 size={18} /> Submit
             </button>
           </div>
 
@@ -262,7 +262,7 @@ export default function QuestionDetailPage() {
       {toast && (
         <div className="toast-container">
           <div className="toast">
-            <FiCheckCircle className="toast-icon" size={18} />
+            <FiCheckCircle className="toast-icon" size={22} />
             {toast}
           </div>
         </div>

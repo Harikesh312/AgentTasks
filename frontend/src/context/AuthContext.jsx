@@ -5,7 +5,12 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token') || null);
+  const [isInitializing, setIsInitializing] = useState(true);
+  
+  // This is the hybrid memory token. 
+  // It handles the "Remember Me = OFF" scenario by holding the token purely in React state.
+  // When the page refreshes, this state is wiped, and since no cookie exists, the user is logged out.
+  const [memoryToken, setMemoryToken] = useState(null);
   
   // Local fallback for completed questions
   const [localCompleted, setLocalCompleted] = useState(() => {
@@ -14,51 +19,69 @@ export function AuthProvider({ children }) {
   });
 
   useEffect(() => {
-    if (token) {
-      setIsLoggedIn(true);
-      fetchUser(token);
-    } else {
-      setIsLoggedIn(false);
-      setUser(null);
-    }
-  }, [token]);
+    // Check auth on mount
+    fetchUser();
+  }, []);
 
-  const fetchUser = async (authToken) => {
+  const fetchUser = async () => {
     try {
+      // If we are mounting, memoryToken is null. We rely purely on the cookie.
+      // If Remember Me was OFF, the cookie doesn't exist -> fails -> logs out (TEST 1 satisfied).
+      // If Remember Me was ON, the cookie exists -> succeeds -> logs in (TEST 2, 3 satisfied).
       const res = await fetch('http://localhost:5000/api/auth/me', {
-        headers: { Authorization: `Bearer ${authToken}` },
+        credentials: 'include'
       });
       if (res.ok) {
         const data = await res.json();
         setUser(data);
+        setIsLoggedIn(true);
       } else {
-        logout();
+        setIsLoggedIn(false);
+        setUser(null);
+        setMemoryToken(null);
       }
     } catch (err) {
       console.error('Failed to fetch user', err);
+      setIsLoggedIn(false);
+      setMemoryToken(null);
+    } finally {
+      setIsInitializing(false);
     }
   };
 
-  const login = (newToken, userData) => {
-    localStorage.setItem('token', newToken);
-    setToken(newToken);
+  const login = (userData) => {
     setUser(userData);
+    setMemoryToken(userData.token || null);
     setIsLoggedIn(true);
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
-    setIsLoggedIn(false);
+  const logout = async () => {
+    try {
+      await fetch('http://localhost:5000/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (err) {
+      console.error('Failed to logout', err);
+    } finally {
+      setUser(null);
+      setMemoryToken(null);
+      setIsLoggedIn(false);
+    }
   };
 
   const completeQuestion = async (questionId) => {
-    if (isLoggedIn && token) {
+    if (isLoggedIn) {
       try {
+        const headers = {};
+        if (memoryToken) {
+          headers['Authorization'] = `Bearer ${memoryToken}`;
+        }
+        
         const res = await fetch(`http://localhost:5000/api/auth/complete/${questionId}`, {
           method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
+          headers: headers
         });
         if (res.ok) {
           const completedQuestions = await res.json();
@@ -80,7 +103,7 @@ export function AuthProvider({ children }) {
   const completedQuestions = isLoggedIn && user ? (user.completedQuestions || []) : localCompleted;
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, login, logout, completedQuestions, completeQuestion }}>
+    <AuthContext.Provider value={{ isLoggedIn, isInitializing, user, memoryToken, login, logout, completedQuestions, completeQuestion }}>
       {children}
     </AuthContext.Provider>
   );

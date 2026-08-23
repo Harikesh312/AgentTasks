@@ -110,25 +110,25 @@ export default function ProfilePage() {
           <div className="lc-community-stats">
             <h3 className="lc-sidebar-title">Community Stats</h3>
             <div className="lc-stat-row">
-              <span className="lc-stat-label"><FiEye size={14} className="icon-blue" /> Views</span>
+              <span className="lc-stat-label"><FiEye size={20} className="icon-blue" /> Views</span>
               <span className="lc-stat-val">{p.communityStats.views}</span>
             </div>
             <div className="lc-stat-sub">Last week 0</div>
             
             <div className="lc-stat-row">
-              <span className="lc-stat-label"><FiCheckSquare size={14} className="icon-cyan" /> Solution</span>
+              <span className="lc-stat-label"><FiCheckSquare size={20} className="icon-cyan" /> Solution</span>
               <span className="lc-stat-val">{p.communityStats.solution}</span>
             </div>
             <div className="lc-stat-sub">Last week 0</div>
             
             <div className="lc-stat-row">
-              <span className="lc-stat-label"><FiMessageCircle size={14} className="icon-green" /> Discuss</span>
+              <span className="lc-stat-label"><FiMessageCircle size={20} className="icon-green" /> Discuss</span>
               <span className="lc-stat-val">{p.communityStats.discuss}</span>
             </div>
             <div className="lc-stat-sub">Last week 0</div>
             
             <div className="lc-stat-row">
-              <span className="lc-stat-label"><FiStar size={14} className="icon-orange" /> Reputation</span>
+              <span className="lc-stat-label"><FiStar size={20} className="icon-orange" /> Reputation</span>
               <span className="lc-stat-val">{p.communityStats.reputation}</span>
             </div>
             <div className="lc-stat-sub">Last week 0</div>
@@ -192,7 +192,7 @@ export default function ProfilePage() {
               <div className="lc-heatmap-stats">
                 <span>Total active days: {p.submissions.activeDays}</span>
                 <span>Max streak: {p.submissions.maxStreak}</span>
-                <button className="lc-dropdown-btn">Current <FiChevronDown size={14} /></button>
+                <button className="lc-dropdown-btn">Current <FiChevronDown size={20} /></button>
               </div>
             </div>
             <Heatmap />

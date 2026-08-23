@@ -30,6 +30,7 @@ export default function SignupPage() {
       const res = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ name, email, password }),
       });
       const data = await res.json();
@@ -38,7 +39,7 @@ export default function SignupPage() {
         throw new Error(data.message || 'Failed to sign up');
       }
 
-      login(data.token, data);
+      login(data);
       navigate('/');
     } catch (err) {
       setError(err.message);
@@ -68,7 +69,7 @@ export default function SignupPage() {
             
             {error && (
               <div className="auth-error animate-slide">
-                <FiAlertCircle size={18} /> {error}
+                <FiAlertCircle size={20} /> {error}
               </div>
             )}
             
@@ -76,7 +77,7 @@ export default function SignupPage() {
               <div className="form-group">
                 <label htmlFor="name">Full Name</label>
                 <div className="input-wrapper">
-                  <FiUser className="input-icon" size={18} />
+                  <FiUser className="input-icon" size={20} />
                   <input
                     type="text"
                     id="name"
@@ -91,7 +92,7 @@ export default function SignupPage() {
               <div className="form-group">
                 <label htmlFor="email">Email</label>
                 <div className="input-wrapper">
-                  <FiMail className="input-icon" size={18} />
+                  <FiMail className="input-icon" size={20} />
                   <input
                     type="email"
                     id="email"
@@ -106,7 +107,7 @@ export default function SignupPage() {
               <div className="form-group">
                 <label htmlFor="password">Password</label>
                 <div className="input-wrapper">
-                  <FiLock className="input-icon" size={18} />
+                  <FiLock className="input-icon" size={20} />
                   <input
                     type={showPassword ? "text" : "password"}
                     id="password"
@@ -120,7 +121,7 @@ export default function SignupPage() {
                     className="password-toggle"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                    {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
                   </button>
                 </div>
               </div>
@@ -128,7 +129,7 @@ export default function SignupPage() {
               <div className="form-group">
                 <label htmlFor="confirmPassword">Confirm Password</label>
                 <div className="input-wrapper">
-                  <FiLock className="input-icon" size={18} />
+                  <FiLock className="input-icon" size={20} />
                   <input
                     type={showConfirmPassword ? "text" : "password"}
                     id="confirmPassword"
@@ -142,7 +143,7 @@ export default function SignupPage() {
                     className="password-toggle"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
-                    {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                    {showConfirmPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
                   </button>
                 </div>
               </div>

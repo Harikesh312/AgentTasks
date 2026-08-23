@@ -7,9 +7,9 @@ import { protect } from '../middleware/auth.js';
 const router = express.Router();
 
 // Generate JWT
-const generateToken = (id) => {
+const generateToken = (id, expiresIn = '1d') => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '30d',
+    expiresIn,
   });
 };
 
@@ -39,12 +39,20 @@ router.post('/register', async (req, res) => {
     });
 
     if (user) {
+      const token = generateToken(user._id, '1d');
+      
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+      });
+      
       res.status(201).json({
         _id: user.id,
         name: user.name,
         email: user.email,
         completedQuestions: user.completedQuestions,
-        token: generateToken(user._id),
+        token, // Optionally return it, but frontend shouldn't store it
       });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
@@ -60,7 +68,7 @@ router.post('/register', async (req, res) => {
 // @access  Public
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
     
     if (!email || !password) {
       return res.status(400).json({ message: 'Please provide email and password' });
@@ -69,12 +77,27 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && (await bcrypt.compare(password, user.password))) {
+      const token = generateToken(user._id, rememberMe ? '7d' : '1d');
+      
+      const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+      };
+      
+      if (rememberMe) {
+        cookieOptions.maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+        res.cookie('token', token, cookieOptions);
+      } else {
+        res.clearCookie('token', cookieOptions);
+      }
+
       res.json({
         _id: user.id,
         name: user.name,
         email: user.email,
         completedQuestions: user.completedQuestions,
-        token: generateToken(user._id),
+        token, // Sent for fallback, but frontend uses cookie
       });
     } else {
       res.status(401).json({ message: 'Invalid credentials' });
@@ -99,6 +122,18 @@ router.get('/me', protect, async (req, res) => {
     console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
+});
+
+// @route   POST /api/auth/logout
+// @desc    Logout user and clear cookie
+// @access  Public
+router.post('/logout', (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
+  });
+  res.json({ message: 'Logged out successfully' });
 });
 
 // @route   POST /api/auth/complete/:questionId

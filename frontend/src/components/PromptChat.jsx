@@ -122,6 +122,7 @@ function StreamingText({ text }) {
 }
 
 export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, questionContext }) {
+  const { user, memoryToken } = useAuth();
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -177,9 +178,15 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
         ? `Question context: ${questionContext}\n\n${conversationHistory}`
         : conversationHistory;
 
+      const headers = { 'Content-Type': 'application/json' };
+      if (memoryToken) {
+        headers['Authorization'] = `Bearer ${memoryToken}`;
+      }
+
       const response = await fetch(`${API_URL}/api/agent/generate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: headers,
+        credentials: 'include',
         body: JSON.stringify({
           prompt: userPrompt,
           context: contextStr || undefined,

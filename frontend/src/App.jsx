@@ -13,7 +13,16 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 
 function ProtectedRoute({ children }) {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, isInitializing } = useAuth();
+  
+  if (isInitializing) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-off-white)' }}>
+        <div style={{ padding: '20px', color: 'var(--text-secondary)' }}>Loading...</div>
+      </div>
+    );
+  }
+
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
   }

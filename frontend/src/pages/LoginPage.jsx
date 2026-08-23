@@ -7,6 +7,7 @@ import './LoginPage.css';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,7 +23,8 @@ export default function LoginPage() {
       const res = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        credentials: 'include',
+        body: JSON.stringify({ email, password, rememberMe }),
       });
       const data = await res.json();
       
@@ -30,7 +32,7 @@ export default function LoginPage() {
         throw new Error(data.message || 'Failed to login');
       }
 
-      login(data.token, data);
+      login(data);
       navigate('/');
     } catch (err) {
       setError(err.message);
@@ -60,7 +62,7 @@ export default function LoginPage() {
             
             {error && (
               <div className="auth-error animate-slide">
-                <FiAlertCircle size={18} /> {error}
+                <FiAlertCircle size={20} /> {error}
               </div>
             )}
             
@@ -68,7 +70,7 @@ export default function LoginPage() {
               <div className="form-group">
                 <label htmlFor="email">Email</label>
                 <div className="input-wrapper">
-                  <FiMail className="input-icon" size={18} />
+                  <FiMail className="input-icon" size={20} />
                   <input
                     type="email"
                     id="email"
@@ -83,7 +85,7 @@ export default function LoginPage() {
               <div className="form-group">
                 <label htmlFor="password">Password</label>
                 <div className="input-wrapper">
-                  <FiLock className="input-icon" size={18} />
+                  <FiLock className="input-icon" size={20} />
                   <input
                     type={showPassword ? "text" : "password"}
                     id="password"
@@ -98,9 +100,22 @@ export default function LoginPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     aria-label="Toggle password visibility"
                   >
-                    {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                    {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
                   </button>
                 </div>
+              </div>
+
+              <div className="form-group-checkbox" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  style={{ width: '16px', height: '16px', accentColor: 'var(--primary)', cursor: 'pointer' }}
+                />
+                <label htmlFor="rememberMe" style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  Remember me
+                </label>
               </div>
               
               <button type="submit" className="btn-primary auth-submit" disabled={loading}>
