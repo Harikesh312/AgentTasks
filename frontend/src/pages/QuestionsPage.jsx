@@ -66,6 +66,11 @@ export default function QuestionsPage() {
       
       {/* PREMIUM HEADER */}
       <div className="premium-q-header">
+        <div className="premium-q-shapes">
+          <div className="shape shape-1" />
+          <div className="shape shape-2" />
+          <div className="shape shape-3" />
+        </div>
         <div className="header-content">
           <div className="header-text">
             <h1 className="page-title">Problems</h1>
