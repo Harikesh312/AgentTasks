@@ -76,21 +76,21 @@ export default function QuestionsPage() {
           
           <div className="header-stats-grid">
             <div className="stat-card">
-              <div className="stat-icon-wrapper neutral"><FiBox size={24} /></div>
+              <div className="stat-icon-wrapper neutral"><FiBox size={28} strokeWidth={2.5} /></div>
               <div className="stat-info">
                 <span className="stat-value">{totalQuestions}</span>
                 <span className="stat-label">Total Problems</span>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-icon-wrapper success"><FiCheckCircle size={24} /></div>
+              <div className="stat-icon-wrapper success"><FiCheckCircle size={28} strokeWidth={2.5} /></div>
               <div className="stat-info">
                 <span className="stat-value">{completedCount}</span>
                 <span className="stat-label">Completed</span>
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-icon-wrapper warning"><FiAlertTriangle size={24} /></div>
+              <div className="stat-icon-wrapper warning"><FiAlertTriangle size={28} strokeWidth={2.5} /></div>
               <div className="stat-info">
                 <span className="stat-value">{trapCount}</span>
                 <span className="stat-label">Optimization Traps</span>

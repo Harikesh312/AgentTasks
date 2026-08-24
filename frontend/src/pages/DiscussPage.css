@@ -9,11 +9,30 @@
 /* ---------- Hero ---------- */
 .discuss-hero {
   position: relative;
-  padding: 60px 24px 40px;
-  margin: 0 -24px 40px;
+  padding: 40px 32px;
+  margin: 0 0 40px 0;
   background: linear-gradient(180deg, var(--bg-white) 0%, var(--primary-light) 100%);
-  border-bottom: 1px solid var(--border-light);
+  border-radius: var(--radius-xl, 20px);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
+}
+
+.discuss-hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 70%;
+  height: 200%;
+  background: radial-gradient(circle, var(--primary-soft, rgba(255, 107, 53, 0.08)) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.discuss-hero-inner {
+  position: relative;
+  z-index: 1;
 }
 
 .discuss-hero-shapes {

@@ -1,9 +1,9 @@
 .filter-bar {
-  background: var(--bg-white, #ffffff);
+  background: linear-gradient(135deg, #ffffff, rgba(255, 107, 53, 0.02));
   border-radius: var(--radius-lg, 14px);
-  padding: 20px 24px;
-  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.06));
-  border: 1px solid var(--border-light, #E8E8E8);
+  padding: 24px 28px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(255, 107, 53, 0.15);
   margin-bottom: 24px;
   display: flex;
   flex-direction: column;
@@ -12,7 +12,8 @@
 }
 
 .filter-bar:hover {
-  box-shadow: var(--shadow-md, 0 4px 12px rgba(0,0,0,0.08));
+  box-shadow: var(--shadow-md);
+  border-color: rgba(255, 107, 53, 0.25);
 }
 
 .filter-header {
@@ -118,10 +119,10 @@
   padding: 6px 16px;
   border-radius: var(--radius-pill, 50px);
   font-size: 0.82rem;
-  font-weight: 500;
-  background: var(--bg-light, #F5F5F5);
+  font-weight: 600;
+  background: var(--bg-white, #ffffff);
   color: var(--text-secondary, #666666);
-  border: 1.5px solid transparent;
+  border: 1px solid var(--border-medium, #D0D0D0);
   transition: all var(--transition);
   cursor: pointer;
   user-select: none;
