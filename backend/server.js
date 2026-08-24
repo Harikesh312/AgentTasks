@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import agentRoutes from './routes/agent.js';
 import discussRoutes from './routes/discuss.js';
+import chatRoutes from './routes/chat.js';
 
 dotenv.config();
 
@@ -33,6 +34,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/agent', agentRoutes);
 app.use('/api/discuss', discussRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Database Connection
 mongoose

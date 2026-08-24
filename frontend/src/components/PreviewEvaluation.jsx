@@ -3,8 +3,9 @@ import {
   FiMonitor, FiSmartphone, FiTablet, FiImage, FiMessageSquare,
   FiCheckCircle, FiAlertTriangle, FiTrendingUp, FiRefreshCw,
   FiClock, FiZap, FiArrowRight, FiTarget, FiLayout, FiCode,
-  FiLayers, FiMaximize, FiCheck, FiX, FiAlertCircle, FiCpu
+  FiLayers, FiMaximize, FiCheck, FiX, FiAlertCircle, FiCpu, FiEye
 } from 'react-icons/fi';
+import ScaledPreview from './ScaledPreview';
 import './PreviewEvaluation.css';
 
 /* ─── Helpers ─── */
@@ -34,44 +35,7 @@ const LOADING_STEPS = [
   'Generating feedback...',
 ];
 
-/* ─── Iframe Renderer ─── */
-function LivePreview({ previewHtml, device }) {
-  const iframeRef = useRef(null);
 
-  useEffect(() => {
-    if (iframeRef.current && previewHtml) {
-      const iframe = iframeRef.current;
-      const doc = iframe.contentDocument || iframe.contentWindow.document;
-      doc.open();
-      doc.write(previewHtml);
-      doc.close();
-    }
-  }, [previewHtml]);
-
-  const widthMap = { desktop: '100%', tablet: '768px', mobile: '375px' };
-
-  return (
-    <div className={`pe-live-frame device-view-${device}`}>
-      <div className="pe-browser-bar">
-        <div className="pe-dots">
-          <span style={{background:'#ef4444'}}></span>
-          <span style={{background:'#f59e0b'}}></span>
-          <span style={{background:'#10b981'}}></span>
-        </div>
-        <div className="pe-browser-url">localhost:3000/preview</div>
-      </div>
-      <div className="pe-iframe-wrapper">
-        <iframe
-          ref={iframeRef}
-          className="pe-iframe"
-          sandbox="allow-scripts allow-same-origin"
-          scrolling="no"
-          title="Live Preview"
-        />
-      </div>
-    </div>
-  );
-}
 /* ─── Device Toggle ─── */
 function DeviceToggle({ device, onDeviceChange }) {
   return (
@@ -171,6 +135,7 @@ export default function PreviewEvaluation({
   previewEvalLoading,
   lastGeneratedAt,
   setActiveTab,
+  onOpenFullPreview,
 }) {
   const [expectedDevice, setExpectedDevice] = useState('desktop');
   const [actualDevice, setActualDevice] = useState('desktop');
@@ -348,6 +313,24 @@ export default function PreviewEvaluation({
              <div className={`pe-ref-frame device-view-${expectedDevice}`}>
                {question.referenceImage ? <img src={question.referenceImage} alt="Reference" className="pe-ref-img" /> : <div className="pe-ref-empty">No reference</div>}
              </div>
+             {question.referenceImage && (
+               <div className="pe-frame-hover-actions">
+                 <button className="btn-outline pe-btn-premium" onClick={() => {
+                   const imgHtml = `
+                     <html style="margin:0;padding:0;height:100%;">
+                       <body style="margin:0;padding:0;height:100%;">
+                         <div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:#f8fafc;">
+                           <img src="${question.referenceImage}" style="max-width:100%;max-height:100%;object-fit:contain;" />
+                         </div>
+                       </body>
+                     </html>
+                   `;
+                   onOpenFullPreview(imgHtml, expectedDevice);
+                 }}>
+                   <FiMaximize size={16} /> Open Full Preview
+                 </button>
+               </div>
+             )}
           </div>
         </div>
         
@@ -368,9 +351,26 @@ export default function PreviewEvaluation({
             <DeviceToggle device={actualDevice} onDeviceChange={setActualDevice} />
           </div>
           <div className="pe-frame-wrapper">
-             <LivePreview previewHtml={currentPreview} device={actualDevice} />
-             <div className="pe-frame-hover-actions">
-               <button className="btn-outline pe-btn-premium"><FiMonitor size={16} /> Inspect Output</button>
+             <div className={`pe-live-frame device-view-${actualDevice}`}>
+               <div className="pe-browser-bar">
+                 <div className="pe-dots">
+                   <span style={{background:'#ef4444'}}></span>
+                   <span style={{background:'#f59e0b'}}></span>
+                   <span style={{background:'#10b981'}}></span>
+                 </div>
+                 <div className="pe-browser-url">localhost:3000/preview</div>
+               </div>
+               <div className="pe-iframe-wrapper">
+                 <ScaledPreview html={currentPreview} device={actualDevice} title="Generated Output" />
+               </div>
+             </div>
+             <div className="pe-frame-hover-actions" style={{ display: 'flex', gap: '12px' }}>
+               <button className="btn-outline pe-btn-premium" onClick={() => onOpenFullPreview(currentPreview, actualDevice)}>
+                 <FiEye size={16} /> Inspect Output
+               </button>
+               <button className="btn-outline pe-btn-premium" style={{ color: '#0f172a', borderColor: '#cbd5e1' }} onClick={() => onOpenFullPreview(currentPreview, 'desktop')}>
+                 Open Full Preview
+               </button>
              </div>
           </div>
         </div>

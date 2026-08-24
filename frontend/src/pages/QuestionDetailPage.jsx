@@ -14,6 +14,7 @@ import FileExplorer from '../components/FileExplorer';
 import PreviewEvaluation from '../components/PreviewEvaluation';
 import EvaluationCard from '../components/EvaluationCard';
 import QuestionDiscussTab from '../components/QuestionDiscussTab';
+import FullPreviewModal from '../components/FullPreviewModal';
 import './QuestionDetailPage.css';
 
 export default function QuestionDetailPage() {
@@ -34,6 +35,15 @@ export default function QuestionDetailPage() {
   const [previewEvaluation, setPreviewEvaluation] = useState(null);
   const [previewEvalLoading, setPreviewEvalLoading] = useState(false);
   const [lastGeneratedAt, setLastGeneratedAt] = useState(null);
+
+  // Full Preview Modal state
+  const [fullPreviewHtml, setFullPreviewHtml] = useState(null);
+  const [fullPreviewDevice, setFullPreviewDevice] = useState('desktop');
+
+  const handleOpenFullPreview = (html, device = 'desktop') => {
+    setFullPreviewHtml(html);
+    setFullPreviewDevice(device);
+  };
 
   // Resizable panels
   const [leftWidth, setLeftWidth] = useState(42); // percentage
@@ -104,6 +114,15 @@ export default function QuestionDetailPage() {
     }
     setCurrentTurn((prev) => prev + 1);
     setLastGeneratedAt(new Date());
+  }, []);
+
+  const handleLoadConversation = useCallback((loadedTurn, files, previewHtml) => {
+    setCurrentTurn(loadedTurn);
+    setCurrentFiles(files || null);
+    setCurrentPreview(previewHtml || null);
+    setShowEval(false);
+    setEvaluation(null);
+    setPreviewEvaluation(null);
   }, []);
 
   const handleDownload = async () => {
@@ -289,16 +308,19 @@ export default function QuestionDetailPage() {
 
           {/* Tab content */}
           <div className="qd-right-content">
-            {activeTab === 'chat' && (
+            <div style={{ display: activeTab === 'chat' ? 'block' : 'none', height: '100%' }}>
               <PromptChat
+                questionId={question.id}
                 currentTurn={currentTurn}
                 maxTurns={question.maxPromptTurns}
                 onAgentResponse={handleAgentResponse}
+                onLoadConversation={handleLoadConversation}
                 questionContext={questionContext}
                 onOpenPreview={() => setActiveTab('preview')}
                 onOpenFile={() => setActiveTab('files')}
+                onOpenFullPreview={handleOpenFullPreview}
               />
-            )}
+            </div>
             {activeTab === 'files' && (
               <FileExplorer
                 files={currentFiles}
@@ -306,6 +328,7 @@ export default function QuestionDetailPage() {
                 onGoToChat={() => setActiveTab('chat')}
                 onOpenPreview={() => setActiveTab('preview')}
                 previewHtml={currentPreview}
+                onOpenFullPreview={handleOpenFullPreview}
               />
             )}
             {activeTab === 'preview' && (
@@ -317,6 +340,7 @@ export default function QuestionDetailPage() {
                 previewEvalLoading={previewEvalLoading}
                 lastGeneratedAt={lastGeneratedAt}
                 setActiveTab={setActiveTab}
+                onOpenFullPreview={handleOpenFullPreview}
               />
             )}
             {activeTab === 'discuss' && (
@@ -343,6 +367,16 @@ export default function QuestionDetailPage() {
             />
           </div>
         </div>
+      )}
+
+      {/* FULL PREVIEW MODAL */}
+      {fullPreviewHtml && (
+        <FullPreviewModal 
+          html={fullPreviewHtml} 
+          device={fullPreviewDevice} 
+          onDeviceChange={setFullPreviewDevice} 
+          onClose={() => setFullPreviewHtml(null)} 
+        />
       )}
 
       {/* Toast */}

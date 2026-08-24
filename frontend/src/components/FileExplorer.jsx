@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { FiFolder, FiFile, FiDownload, FiCode, FiFileText, FiHash, FiTerminal, FiEye, FiCheckCircle, FiMessageSquare, FiArrowRight, FiArrowLeft, FiArrowDown } from 'react-icons/fi';
 import CodeViewer from './CodeViewer';
+import ScaledPreview from './ScaledPreview';
 import './FileExplorer.css';
 
 const fileIcons = {
@@ -22,7 +23,7 @@ const formatSize = (content) => {
   return (bytes / 1024).toFixed(1) + ' KB';
 };
 
-export default function FileExplorer({ files, onDownload, onGoToChat, onOpenPreview, previewHtml }) {
+export default function FileExplorer({ files, onDownload, onGoToChat, onOpenPreview, previewHtml, onOpenFullPreview }) {
   const [selectedFile, setSelectedFile] = useState(null);
 
   if (!files || Object.keys(files).length === 0) {
@@ -52,10 +53,10 @@ export default function FileExplorer({ files, onDownload, onGoToChat, onOpenPrev
           <h4 className="fe-files-preview-title">Files you'll receive</h4>
           <div className="fe-placeholder-timeline">
             {/* HTML */}
-            <div className="fe-timeline-step">
+            <div className="fe-timeline-step fe-card-html">
               <div className="fe-placeholder-card">
                 <div className="fe-placeholder-icon">
-                  <FiCode size={20} color="#e44d26" />
+                  <FiCode size={24} color="#e44d26" />
                 </div>
                 <div className="fe-placeholder-info">
                   <span className="fe-placeholder-name">index.html</span>
@@ -64,13 +65,13 @@ export default function FileExplorer({ files, onDownload, onGoToChat, onOpenPrev
               </div>
             </div>
             
-            <div className="fe-timeline-arrow"><FiArrowDown size={16} color="#cbd5e1" /></div>
+            <div className="fe-timeline-arrow"><FiArrowRight size={16} color="#94a3b8" /></div>
             
             {/* CSS */}
-            <div className="fe-timeline-step">
+            <div className="fe-timeline-step fe-card-css">
               <div className="fe-placeholder-card">
                 <div className="fe-placeholder-icon">
-                  <FiHash size={20} color="#264de4" />
+                  <FiHash size={24} color="#3b82f6" />
                 </div>
                 <div className="fe-placeholder-info">
                   <span className="fe-placeholder-name">styles.css</span>
@@ -79,13 +80,13 @@ export default function FileExplorer({ files, onDownload, onGoToChat, onOpenPrev
               </div>
             </div>
 
-            <div className="fe-timeline-arrow"><FiArrowDown size={16} color="#cbd5e1" /></div>
+            <div className="fe-timeline-arrow"><FiArrowRight size={16} color="#94a3b8" /></div>
 
             {/* JS */}
-            <div className="fe-timeline-step">
+            <div className="fe-timeline-step fe-card-js">
               <div className="fe-placeholder-card">
                 <div className="fe-placeholder-icon">
-                  <FiTerminal size={20} color="#f7df1e" />
+                  <FiTerminal size={24} color="#f59e0b" />
                 </div>
                 <div className="fe-placeholder-info">
                   <span className="fe-placeholder-name">script.js</span>
@@ -147,11 +148,14 @@ export default function FileExplorer({ files, onDownload, onGoToChat, onOpenPrev
                 <h4>Output Generated Successfully</h4>
               </div>
               <div className="fe-generated-preview-compact">
-                <iframe srcDoc={previewHtml} title="Preview" sandbox="allow-scripts" frameBorder="0" scrolling="no" />
+                <ScaledPreview html={previewHtml} />
               </div>
-              <div className="fe-generated-footer">
+              <div className="fe-generated-footer" style={{ display: 'flex', gap: '12px' }}>
                 <button className="btn-primary pe-btn-premium" onClick={onOpenPreview}>
-                  <FiEye size={16} style={{marginRight: '8px'}} /> Open Full Preview
+                  <FiEye size={16} style={{marginRight: '8px'}} /> Open Split Preview
+                </button>
+                <button className="btn-outline pe-btn-premium" style={{ color: '#0f172a', borderColor: '#cbd5e1' }} onClick={() => onOpenFullPreview(previewHtml, 'desktop')}>
+                  Open Full Preview
                 </button>
               </div>
             </div>

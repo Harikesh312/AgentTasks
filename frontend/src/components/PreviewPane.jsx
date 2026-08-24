@@ -2,10 +2,17 @@ import { useState, useRef, useEffect } from 'react';
 import { FiMonitor, FiSmartphone, FiTablet, FiZap, FiRefreshCw } from 'react-icons/fi';
 import './PreviewPane.css';
 
+const DEVICE_SIZES = {
+  desktop: { w: 1280, h: 960 },
+  tablet:  { w: 768,  h: 1024 },
+  mobile:  { w: 375,  h: 812 },
+};
+
 export default function PreviewPane({ previewHtml, deviceOverride, onDeviceChange }) {
   const [internalDevice, setInternalDevice] = useState('desktop');
   const device = deviceOverride || internalDevice;
   const iframeRef = useRef(null);
+  const viewportRef = useRef(null);
 
   const handleDeviceChange = (d) => {
     setInternalDevice(d);
@@ -21,6 +28,36 @@ export default function PreviewPane({ previewHtml, deviceOverride, onDeviceChang
       doc.close();
     }
   }, [previewHtml]);
+
+  // Dynamic scaling with ResizeObserver
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    const iframe = iframeRef.current;
+    if (!viewport || !iframe || !previewHtml) return;
+
+    const recalc = () => {
+      const { w: vw, h: vh } = DEVICE_SIZES[device] || DEVICE_SIZES.desktop;
+      const cw = viewport.clientWidth;
+      const ch = viewport.clientHeight;
+      if (cw === 0 || ch === 0) return;
+
+      const scale = Math.min(cw / vw, ch / vh);
+      iframe.style.width = vw + 'px';
+      iframe.style.height = vh + 'px';
+      iframe.style.transform = `scale(${scale})`;
+      iframe.style.transformOrigin = 'top left';
+      // Center the scaled iframe
+      const scaledW = vw * scale;
+      const scaledH = vh * scale;
+      iframe.style.marginLeft = Math.max(0, (cw - scaledW) / 2) + 'px';
+      iframe.style.marginTop = Math.max(0, (ch - scaledH) / 2) + 'px';
+    };
+
+    const ro = new ResizeObserver(recalc);
+    ro.observe(viewport);
+    requestAnimationFrame(recalc);
+    return () => ro.disconnect();
+  }, [device, previewHtml]);
 
   const handleRefresh = () => {
     if (iframeRef.current && previewHtml) {
@@ -79,12 +116,13 @@ export default function PreviewPane({ previewHtml, deviceOverride, onDeviceChang
           </div>
           <div className="browser-actions" />
         </div>
-        <div className="browser-viewport">
+        <div className="browser-viewport" ref={viewportRef}>
           {previewHtml ? (
             <iframe
               ref={iframeRef}
               className="preview-iframe"
               sandbox="allow-scripts allow-same-origin"
+              scrolling="no"
               title="Agent Preview"
             />
           ) : (

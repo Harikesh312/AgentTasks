@@ -58,8 +58,8 @@
 
 .pe-separator-top {
   border-top: 1px solid #e2e8f0;
-  padding-top: 32px;
-  margin-top: 32px;
+  padding-top: 24px;
+  margin-top: 24px;
 }
 
 .pe-section {
@@ -270,7 +270,7 @@
 .pe-panel {
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  padding: 16px;
   position: relative;
   min-width: 200px;
 }
@@ -376,12 +376,12 @@
   border: 1px solid #e2e8f0;
   border-radius: 0 0 14px 14px;
   overflow: hidden;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  background: #f1f5f9; /* changed to distinct bg so devices stand out */
   transition: all 0.2s ease;
-  height: 500px;
+  height: 320px;
   display: flex;
   flex-direction: column;
+  align-items: center; /* center the device frame */
 }
 
 .pe-frame-wrapper-before {
@@ -654,20 +654,17 @@
   flex: 1;
   position: relative;
   overflow: hidden;
-  container-type: size;
   background: white;
 }
 
 .pe-iframe {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 1280px;
-  height: 960px;
-  transform: translate(-50%, -50%) scale(calc(min(100cqi / 1280, 100cqh / 960)));
-  transform-origin: center center;
+  top: 0;
+  left: 0;
   border: none;
   pointer-events: none;
+  transform-origin: top left;
+  transition: width 0.3s ease, height 0.3s ease;
 }
 
 .pe-ref-img {
@@ -1177,4 +1174,47 @@
   color: #1e293b;
 }
 
+/* ─── Device Views ─── */
+.pe-live-frame, .pe-ref-frame {
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  transition: max-width 0.3s ease, aspect-ratio 0.3s ease;
+  background: white;
+}
+
+.pe-ref-frame {
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+}
+
+/* 
+  Since the container height is ~420px, setting an aspect ratio 
+  will constrain the width proportionally, creating a true device box!
+*/
+.device-view-desktop {
+  max-width: 100%;
+  aspect-ratio: auto;
+  width: 100%;
+}
+
+.device-view-tablet {
+  aspect-ratio: 768 / 1024;
+  width: auto;
+  /* Add border/shadow to make the device boundary clear */
+  border-left: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0;
+  box-shadow: 0 0 20px rgba(0,0,0,0.05);
+}
+
+.device-view-mobile {
+  aspect-ratio: 390 / 844;
+  width: auto;
+  border-left: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0;
+  box-shadow: 0 0 20px rgba(0,0,0,0.05);
+}
 
