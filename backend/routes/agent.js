@@ -74,6 +74,28 @@ router.post('/generate', async (req, res) => {
     // Phase 1: Analyzing
     sendEvent('phase', { phase: 'analyzing', message: 'Analyzing your request...' });
 
+    // Validate the input
+    const validationModel = genAI.getGenerativeModel({
+      model: 'gemini-3.1-flash-lite',
+      systemInstruction: 'You are an input validator for a frontend coding agent. Your ONLY job is to determine if the user\'s prompt is a valid request to build, fix, or improve a UI component. Respond with exactly "VALID" if it makes sense as a request (even a short one like "Make it blue" or "Build a login page" or "Fix the scrollbar"). Respond with "INVALID" if it is gibberish, conversational chatter (like "hehehe", "hi", "how are you"), or completely unrelated to coding.',
+    });
+
+    const validationResult = await validationModel.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.1, maxOutputTokens: 10 }
+    });
+    
+    const validationText = validationResult.response.text().trim();
+    if (validationText.includes('INVALID')) {
+      sendEvent('error', {
+        phase: 'error',
+        code: 'INVALID_INPUT',
+        message: 'Invalid input. Please describe what you want the agent to build, fix, or improve.',
+      });
+      res.end();
+      return;
+    }
+
     // Build the full prompt with context
     let fullPrompt = prompt;
     if (context) {

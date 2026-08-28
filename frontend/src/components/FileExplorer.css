@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════
    FileExplorer.css
-   Premium Light Theme
+   Premium Light Theme — Compact Viewport Fit
    ═══════════════════════════════════════════ */
 
 .fe-container {
@@ -12,157 +12,14 @@
   font-family: var(--font-sans);
 }
 
-/* ─── Compact Empty State ─── */
-.fe-empty-state-compact {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 32px 24px;
-  margin-bottom: 32px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-  gap: 16px;
-}
-
-.fe-empty-icon-wrapper-small {
-  width: 48px;
-  height: 48px;
-  background: #f1f5f9;
-  color: #94a3b8;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0;
-}
-
-.fe-empty-text-compact {
-  margin: 0;
-}
-
-.fe-empty-title-compact {
-  font-size: 16px;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0 0 4px 0;
-}
-
-.fe-empty-desc-compact {
-  font-size: 13px;
-  color: #64748b;
-  margin: 0;
-}
-
-.fe-files-preview-section {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  background: #f8fafc;
-  border: 1px dashed #cbd5e1;
-  border-radius: 16px;
-  padding: 40px;
-  align-items: center;
-  flex: 1;
-}
-
-.fe-files-preview-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin: 0 0 16px 0;
-}
-
-.fe-placeholder-timeline {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  position: relative;
-}
-
-.fe-placeholder-timeline::before {
-  content: '';
-  position: absolute;
-  top: 24px;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 2px;
-  background: #e2e8f0;
-  z-index: 0;
-}
-
-.fe-timeline-step {
-  position: relative;
-  z-index: 1;
-}
-
-.fe-timeline-arrow {
-  position: relative;
-  z-index: 1;
-  background: #f8fafc;
-  padding: 4px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.fe-placeholder-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-  width: 200px;
-}
-
-.fe-placeholder-icon {
-  width: 40px;
-  height: 40px;
-  background: #f1f5f9;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.fe-placeholder-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.fe-placeholder-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: #1e293b;
-  font-family: var(--font-mono);
-}
-
-.fe-placeholder-desc {
-  font-size: 12px;
-  color: #64748b;
-  margin-top: 2px;
-}
-
+/* ─── Header ─── */
 .fe-header-section {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px 0 32px 0;
+  padding: 16px 0 16px 0;
   border-bottom: 1px solid #e2e8f0;
-  margin-bottom: 32px;
+  margin-bottom: 16px;
 }
 
 .fe-heading {
@@ -179,7 +36,244 @@
   margin-top: 4px;
 }
 
-/* ─── Timeline Overview State ─── */
+/* ─── Compact Empty State ─── */
+.fe-empty-state-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  gap: 12px;
+}
+
+.fe-empty-icon-wrapper-small {
+  width: 44px;
+  height: 44px;
+  background: #f1f5f9;
+  color: #94a3b8;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+.fe-empty-text-compact {
+  margin: 0;
+}
+
+.fe-empty-title-compact {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 2px 0;
+}
+
+.fe-empty-desc-compact {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ─── Files Preview Section ─── */
+.fe-files-preview-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 14px;
+  padding: 20px 24px;
+  align-items: center;
+  flex: 1;
+}
+
+.fe-files-preview-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 4px 0;
+}
+
+/* ─── Horizontal Timeline ─── */
+.fe-placeholder-timeline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 16px;
+  position: relative;
+  padding: 20px 0 20px 0;
+}
+
+@media (max-width: 768px) {
+  .fe-placeholder-timeline {
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 0;
+    gap: 12px;
+  }
+  .fe-timeline-step:nth-child(n) { margin-top: 0; }
+  .fe-timeline-arrow { transform: rotate(90deg) !important; margin-top: 0 !important; margin-bottom: 0 !important; }
+}
+
+/* Remove the old vertical line */
+.fe-placeholder-timeline::before {
+  display: none;
+}
+
+.fe-timeline-step {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  max-width: 200px;
+}
+
+.fe-timeline-arrow {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  flex-shrink: 0;
+}
+
+/* The thin connector line between cards */
+.fe-timeline-arrow::before {
+  content: '';
+  position: absolute;
+  top: 40px;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: linear-gradient(15deg, #cbd5e1 0%, transparent 100%);
+  transform: translateY(-50%) rotate(8deg);
+  border-radius: 1px;
+  z-index: 1;
+}
+
+@media (max-width: 768px) {
+  .fe-placeholder-timeline::before {
+    display: none;
+  }
+}
+
+.fe-timeline-step:nth-child(1) { margin-top: 0; position: relative; z-index: 2; }
+.fe-timeline-step:nth-child(3) { margin-top: 40px; position: relative; z-index: 2; }
+.fe-timeline-step:nth-child(5) { margin-top: 80px; position: relative; z-index: 2; }
+
+.fe-timeline-arrow:nth-child(2) { margin-top: 25px; transform: rotate(15deg); z-index: 2; }
+.fe-timeline-arrow:nth-child(4) { margin-top: 65px; transform: rotate(15deg); z-index: 2; }
+
+
+.fe-timeline-arrow svg {
+  position: relative;
+  z-index: 2;
+  background: #f8fafc;
+  border-radius: 50%;
+  padding: 2px;
+}
+
+/* ─── Accent File Cards ─── */
+.fe-placeholder-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s ease;
+  cursor: default;
+}
+
+.fe-placeholder-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* --- Coral/Orange accent for index.html --- */
+.fe-card-html .fe-placeholder-card {
+  border-color: #ffcdb2;
+  background: #fff8f5;
+}
+.fe-card-html .fe-placeholder-card:hover {
+  border-color: #ff8a65;
+  box-shadow: 0 6px 16px rgba(255, 107, 53, 0.12);
+}
+.fe-card-html .fe-placeholder-icon {
+  background: #fff0e8;
+  border: 1px solid #ffd7c2;
+}
+
+/* --- Blue accent for styles.css --- */
+.fe-card-css .fe-placeholder-card {
+  border-color: #bfdbfe;
+  background: #f5f8ff;
+}
+.fe-card-css .fe-placeholder-card:hover {
+  border-color: #60a5fa;
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.12);
+}
+.fe-card-css .fe-placeholder-icon {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+
+/* --- Yellow/Amber accent for script.js --- */
+.fe-card-js .fe-placeholder-card {
+  border-color: #fde68a;
+  background: #fffdf5;
+}
+.fe-card-js .fe-placeholder-card:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.12);
+}
+.fe-card-js .fe-placeholder-icon {
+  background: #fefce8;
+  border: 1px solid #fde68a;
+}
+
+.fe-placeholder-icon {
+  width: 42px;
+  height: 42px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.fe-placeholder-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.fe-placeholder-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  font-family: var(--font-mono);
+}
+
+.fe-placeholder-desc {
+  font-size: 12px;
+  color: #475569;
+  margin-top: 2px;
+}
+
+/* ─── Timeline Overview State (files exist) ─── */
 .fe-overview-state {
   display: flex;
   flex-direction: column;
@@ -195,10 +289,12 @@
   flex-wrap: wrap;
 }
 
-.fe-timeline-step {
+.fe-timeline > .fe-timeline-step {
   display: flex;
   align-items: center;
   gap: 16px;
+  max-width: none;
+  flex: unset;
 }
 
 .fe-timeline-card {
@@ -296,20 +392,16 @@
   overflow: hidden;
   position: relative;
   margin-bottom: 20px;
-  container-type: size;
 }
 
 .fe-generated-preview-compact iframe {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 1280px;
-  height: 960px;
-  transform: translate(-50%, -50%) scale(calc(min(100cqi / 1280, 100cqh / 960)));
-  transform-origin: center center;
+  top: 0;
+  left: 0;
   border: none;
   pointer-events: none;
   background: white;
+  transform-origin: top left;
 }
 
 .fe-generated-footer {

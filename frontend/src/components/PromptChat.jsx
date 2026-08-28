@@ -1,11 +1,26 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { FiUser, FiCpu, FiSend, FiMessageSquare, FiCode, FiFile, FiChevronDown, FiChevronRight, FiCopy, FiCheck, FiSearch, FiLayout, FiZap, FiFolder, FiCheckCircle, FiAlertTriangle, FiClock, FiExternalLink } from 'react-icons/fi';
+import { FiUser, FiCpu, FiSend, FiMessageSquare, FiCode, FiFile, FiChevronDown, FiChevronRight, FiCopy, FiCheck, FiSearch, FiLayout, FiZap, FiFolder, FiCheckCircle, FiAlertTriangle, FiClock, FiExternalLink, FiPlus, FiMoreVertical, FiEdit2, FiTrash2, FiMenu } from 'react-icons/fi';
 import ReactMarkdown from 'react-markdown';
 import { useAuth } from '../context/AuthContext';
 import ChatSidebar from './ChatSidebar';
+import ScaledPreview from './ScaledPreview';
 import './PromptChat.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+const timeAgo = (dateStr) => {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} hours ago`;
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return `${days} days ago`;
+  return `${Math.floor(days / 7)} weeks ago`;
+};
 
 const PHASE_CONFIG = {
   analyzing: {
@@ -49,14 +64,13 @@ const PHASE_CONFIG = {
 function FileCard({ fileName, code, onOpen }) {
   const lineCount = code.split('\n').length;
   
-  // Basic icon mapping
   const ext = fileName.split('.').pop();
   let Icon = FiFile;
   let color = '#64748b';
   
   if (ext === 'html') { Icon = FiCode; color = '#e44d26'; }
-  if (ext === 'css') { Icon = FiCode; color = '#264de4'; } // FiHash equivalent
-  if (ext === 'js') { Icon = FiCode; color = '#f7df1e'; } // FiTerminal equivalent
+  if (ext === 'css') { Icon = FiCode; color = '#264de4'; }
+  if (ext === 'js') { Icon = FiCode; color = '#f7df1e'; }
   
   return (
     <div className="chat-file-card" onClick={onOpen}>
@@ -109,7 +123,7 @@ function StreamingText({ text }) {
   );
 }
 
-export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, questionContext, onOpenPreview, onOpenFile, questionId, onChatLoaded, onGoToChats, pendingChatId, onPendingChatConsumed }) {
+export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, questionContext, onOpenPreview, onOpenFile, questionId, onChatLoaded, onGoToChats, pendingChatId, onPendingChatConsumed, onOpenFullPreview }) {
   const { user, memoryToken, isLoggedIn } = useAuth();
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
@@ -118,9 +132,159 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
   const [completedPhases, setCompletedPhases] = useState([]);
   const [streamingText, setStreamingText] = useState('');
   const [conversationHistory, setConversationHistory] = useState('');
+  
   const chatEndRef = useRef(null);
   const textareaRef = useRef(null);
   const abortControllerRef = useRef(null);
+  const activeConversationRef = useRef(null);
+  const hasInitialized = useRef(false);
+
+  // Sync ref with state
+  useEffect(() => {
+    activeConversationRef.current = activeConversationId;
+  }, [activeConversationId]);
+
+  // 1. Fetch Conversations
+  useEffect(() => {
+    const fetchConversations = async () => {
+      if (!questionId) return;
+      try {
+        setIsLoadingHistory(true);
+        const headers = {};
+        if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
+        
+        const res = await fetch(`${API_URL}/api/chat/conversations/${questionId}`, {
+          headers,
+          credentials: 'include'
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setConversations(data);
+          
+          if (!hasInitialized.current) {
+            hasInitialized.current = true;
+            if (data.length > 0 && !activeConversationId) {
+              handleSelectConversation(data[0]._id);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load history', err);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+    fetchConversations();
+  }, [questionId, memoryToken]);
+
+  // 2. Select Conversation
+  const handleSelectConversation = async (convId) => {
+    try {
+      setActiveConversationId(convId);
+      setMessages([]);
+      setConversationHistory('');
+      
+      const headers = {};
+      if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
+
+      const res = await fetch(`${API_URL}/api/chat/conversations/${convId}/messages`, {
+        headers,
+        credentials: 'include'
+      });
+      const data = await res.json();
+      
+      const loadedMessages = data.messages.map(m => ({
+        id: m._id,
+        role: m.role,
+        content: m.content,
+        files: m.files,
+        previewHtml: m.previewHtml,
+        isError: m.isError
+      }));
+      setMessages(loadedMessages);
+      
+      let hist = '';
+      loadedMessages.forEach(m => {
+        if (m.role === 'user') hist += `User: ${m.content}\n`;
+        else hist += `Agent: ${m.content}\n\n`;
+      });
+      setConversationHistory(hist);
+      
+      const agentMessages = loadedMessages.filter(m => m.role === 'agent' && m.files);
+      const lastAgentMsg = agentMessages[agentMessages.length - 1];
+      const turnCount = loadedMessages.filter(m => m.role === 'user').length;
+      
+      if (onLoadConversation) {
+        onLoadConversation(
+          turnCount, 
+          lastAgentMsg ? lastAgentMsg.files : null, 
+          lastAgentMsg ? lastAgentMsg.previewHtml : null
+        );
+      }
+    } catch (err) {
+      console.error('Failed to load conversation', err);
+    }
+  };
+
+  // 3. New Chat
+  const handleNewChat = () => {
+    setActiveConversationId(null);
+    setMessages([]);
+    setConversationHistory('');
+    if (onLoadConversation) {
+      onLoadConversation(0, null, null);
+    }
+  };
+
+  // 4. Rename / Delete
+  const submitRename = async (id) => {
+    try {
+      if (!renameValue.trim()) {
+        setRenamingId(null);
+        return;
+      }
+      const headers = { 'Content-Type': 'application/json' };
+      if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
+
+      const res = await fetch(`${API_URL}/api/chat/conversations/${id}`, {
+        method: 'PATCH',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({ title: renameValue })
+      });
+      if (res.ok) {
+        setConversations(prev => prev.map(c => c._id === id ? { ...c, title: renameValue } : c));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setRenamingId(null);
+    }
+  };
+
+  const handleDelete = async (e, id) => {
+    e.stopPropagation();
+    if (!window.confirm('Delete this conversation? This cannot be undone.')) return;
+    try {
+      const headers = {};
+      if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
+
+      const res = await fetch(`${API_URL}/api/chat/conversations/${id}`, {
+        method: 'DELETE',
+        headers,
+        credentials: 'include'
+      });
+      if (res.ok) {
+        setConversations(prev => prev.filter(c => c._id !== id));
+        if (activeConversationId === id) {
+          handleNewChat();
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
 
   // Chat history state
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -279,8 +443,8 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
   const handleSend = useCallback(async () => {
     if (!input.trim() || currentTurn >= maxTurns || isStreaming) return;
 
-    const userPrompt = input.trim();
-    const userMsg = { role: 'user', content: userPrompt };
+    const submittedPrompt = input.trim();
+    const userMsg = { role: 'user', content: submittedPrompt };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setIsStreaming(true);
@@ -297,7 +461,7 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
 
     // Persist user message
     if (chatId) {
-      appendMessage(chatId, { role: 'user', content: userPrompt });
+      appendMessage(chatId, { role: 'user', content: submittedPrompt });
     }
 
     // Create an agent message placeholder
@@ -307,21 +471,32 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
     abortControllerRef.current = new AbortController();
 
     try {
+      let currentConvId = activeConversationId;
+      const initialConvId = currentConvId;
+      
+      const headers = { 'Content-Type': 'application/json' };
+      if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
+
+      // Save User Message immediately if it's an existing chat
+      if (currentConvId) {
+        await fetch(`${API_URL}/api/chat/conversations/${currentConvId}/messages`, {
+          method: 'POST',
+          headers,
+          credentials: 'include',
+          body: JSON.stringify({ role: 'user', content: submittedPrompt })
+        });
+      }
+
       const contextStr = questionContext
         ? `Question context: ${questionContext}\n\n${conversationHistory}`
         : conversationHistory;
 
-      const headers = { 'Content-Type': 'application/json' };
-      if (memoryToken) {
-        headers['Authorization'] = `Bearer ${memoryToken}`;
-      }
-
       const response = await fetch(`${API_URL}/api/agent/generate`, {
         method: 'POST',
-        headers: headers,
+        headers,
         credentials: 'include',
         body: JSON.stringify({
-          prompt: userPrompt,
+          prompt: submittedPrompt,
           context: contextStr || undefined,
         }),
         signal: abortControllerRef.current.signal,
@@ -338,6 +513,11 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
       let finalData = null;
 
       while (true) {
+        if (initialConvId !== activeConversationRef.current) {
+          abortControllerRef.current.abort();
+          return;
+        }
+        
         const { done, value } = await reader.read();
         if (done) break;
 
@@ -346,10 +526,7 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
         buffer = lines.pop() || '';
 
         for (const line of lines) {
-          if (line.startsWith('event: ')) {
-            const eventType = line.slice(7).trim();
-            continue;
-          }
+          if (line.startsWith('event: ')) continue;
           if (line.startsWith('data: ')) {
             const dataStr = line.slice(6);
             try {
@@ -358,30 +535,27 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
               if (data.phase) {
                 if (data.phase === 'complete') {
                   finalData = data;
-                  // Mark current phase as done
-                  if (currentPhase) {
-                    setCompletedPhases((prev) => [...prev, currentPhase]);
-                  }
+                  if (currentPhase) setCompletedPhases((prev) => [...prev, currentPhase]);
                   setCurrentPhase('complete');
                 } else if (data.phase === 'error') {
                   setCurrentPhase('error');
-                  setMessages((prev) => [
-                    ...prev,
-                    {
-                      role: 'agent',
-                      content: `Error: ${data.message}`,
-                      isError: true,
-                    },
-                  ]);
+                  const errorMsg = `Error: ${data.message}`;
+                  setMessages((prev) => [...prev, { role: 'agent', content: errorMsg, isError: true }]);
+                  
+                  if (currentConvId) {
+                    await fetch(`${API_URL}/api/chat/conversations/${currentConvId}/messages`, {
+                      method: 'POST',
+                      headers,
+                      credentials: 'include',
+                      body: JSON.stringify({ role: 'agent', content: errorMsg, isError: true })
+                    });
+                  }
                   setIsStreaming(false);
                   return;
                 } else {
-                  // Transition phases
                   setCompletedPhases((prev) => {
                     const newPhases = [...prev];
-                    if (currentPhase && !newPhases.includes(currentPhase)) {
-                      newPhases.push(currentPhase);
-                    }
+                    if (currentPhase && !newPhases.includes(currentPhase)) newPhases.push(currentPhase);
                     return newPhases;
                   });
                   setCurrentPhase(data.phase);
@@ -400,10 +574,36 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
       }
 
       // Process final response
+      if (initialConvId !== activeConversationRef.current) return;
+
       if (finalData) {
+        // If this was a new chat, create the conversation and save user message NOW
+        if (!currentConvId) {
+          let newTitle = submittedPrompt.split('\n')[0].substring(0, 40);
+          if (newTitle.length === 40) newTitle += '...';
+          
+          const convRes = await fetch(`${API_URL}/api/chat/conversations`, {
+            method: 'POST',
+            headers,
+            credentials: 'include',
+            body: JSON.stringify({ questionId, title: newTitle })
+          });
+          const convData = await convRes.json();
+          currentConvId = convData._id;
+          setActiveConversationId(currentConvId);
+          
+          await fetch(`${API_URL}/api/chat/conversations/${currentConvId}/messages`, {
+            method: 'POST',
+            headers,
+            credentials: 'include',
+            body: JSON.stringify({ role: 'user', content: submittedPrompt })
+          });
+        }
+
+        const agentContent = finalData.explanation || 'Here is what I built for you:';
         const agentMessage = {
           role: 'agent',
-          content: finalData.explanation || 'Here is what I built for you:',
+          content: agentContent,
           files: finalData.files || null,
           previewHtml: finalData.previewHtml || null,
         };
@@ -422,12 +622,11 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
         // Update conversation history for follow-up context
         setConversationHistory(
           (prev) =>
-            `${prev}\nUser: ${userPrompt}\nAgent: ${finalData.explanation || 'Generated code files.'}\n`
+            `${prev}\nUser: ${submittedPrompt}\nAgent: ${finalData.explanation || 'Generated code files.'}\n`
         );
 
-        // Notify parent component
         if (onAgentResponse) {
-          onAgentResponse(userPrompt, {
+          onAgentResponse(submittedPrompt, {
             files: finalData.files,
             previewHtml: finalData.previewHtml,
             explanation: finalData.explanation,
@@ -447,21 +646,42 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
         }
 
         if (onAgentResponse) {
-          onAgentResponse(userPrompt, { files: null, previewHtml: null, explanation: fullStreamedText });
+          onAgentResponse(submittedPrompt, { files: null, previewHtml: null, explanation: fullStreamedText });
         }
       }
     } catch (error) {
       if (error.name === 'AbortError') return;
       console.error('Streaming error:', error);
-      setMessages((prev) => [
-        ...prev,
-        { role: 'agent', content: `Error: ${error.message}`, isError: true },
-      ]);
+      const errorMsg = `Error: ${error.message}`;
+      setMessages((prev) => [...prev, { role: 'agent', content: errorMsg, isError: true }]);
+      
+      if (activeConversationId) {
+        await fetch(`${API_URL}/api/chat/conversations/${activeConversationId}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(memoryToken ? {'Authorization': `Bearer ${memoryToken}`} : {}) },
+          credentials: 'include',
+          body: JSON.stringify({ role: 'agent', content: errorMsg, isError: true })
+        });
+      }
     } finally {
       setIsStreaming(false);
       setCurrentPhase(null);
       setCompletedPhases([]);
       setStreamingText('');
+      abortControllerRef.current = null;
+      
+      // Always refresh conversations to update sidebar order and timestamps
+      try {
+        const headers = {};
+        if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
+        const res = await fetch(`${API_URL}/api/chat/conversations/${questionId}`, { headers, credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          setConversations(data);
+        }
+      } catch (err) {
+        console.error('Failed to refresh conversations:', err);
+      }
     }
   }, [input, currentTurn, maxTurns, isStreaming, conversationHistory, questionContext, onAgentResponse, activeChatId, isLoggedIn, questionId]);
 
@@ -473,6 +693,11 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
   };
 
   const allPhases = ['analyzing', 'planning', 'generating', 'creating_files'];
+
+  const activeConv = conversations.find(c => c._id === activeConversationId);
+
+  const sortedByCreate = [...conversations].sort((a, b) => a._id.localeCompare(b._id));
+
 
   return (
     <div className="prompt-chat-wrapper" id="prompt-chat">
@@ -535,7 +760,7 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
                 <div className="empty-icon-ring" />
               </div>
               <p className="empty-title">Write a prompt to instruct the AI agent.</p>
-              <p className="empty-hint">Describe what you want the agent to build. The AI will generate real, working code.</p>
+              <p className="empty-hint">Describe what you want the agent to build, fix, or improve. The AI will generate real, working code.</p>
             </div>
           )}
           {messages.map((msg, i) => (
@@ -567,18 +792,15 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
                         <div className="thumbnail-url">localhost:3000</div>
                       </div>
                       <div className="thumbnail-iframe-wrapper">
-                        <iframe
-                          srcDoc={msg.previewHtml}
-                          sandbox="allow-scripts allow-same-origin"
-                          scrolling="no"
-                          title="Preview Thumbnail"
-                          className="thumbnail-iframe-large"
-                        />
+                        <ScaledPreview html={msg.previewHtml} device="desktop" title="Preview Thumbnail" />
                       </div>
                     </div>
-                    <div className="result-card-actions">
+                    <div className="result-card-actions" style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                       <button className="btn-primary open-preview-btn-large" onClick={onOpenPreview}>
-                        Open Preview
+                        Open Split Preview
+                      </button>
+                      <button className="btn-outline open-preview-btn-large" style={{ color: '#0f172a', borderColor: '#cbd5e1' }} onClick={() => onOpenFullPreview(msg.previewHtml, 'desktop')}>
+                        Open Full Preview
                       </button>
                     </div>
                   </div>
@@ -624,7 +846,7 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
                   )}
                 </div>
 
-                {/* Live Streaming Text (during generating phase) */}
+                {/* Live Streaming Text */}
                 {currentPhase === 'generating' && streamingText && (
                   <div className="streaming-output">
                     <div className="streaming-output-header">
@@ -644,26 +866,41 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
           )}
           <div ref={chatEndRef} />
         </div>
-        <div className="chat-input-area">
-          <textarea
-            ref={textareaRef}
-            value={input}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            placeholder={currentTurn >= maxTurns ? 'Max prompt turns reached' : 'Describe what the agent should build or fix...'}
-            disabled={currentTurn >= maxTurns || isStreaming}
-            className="chat-textarea auto-resize"
-            id="prompt-input"
-            rows={1}
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || currentTurn >= maxTurns || isStreaming}
-            className="btn-primary send-btn"
-            id="send-prompt-btn"
+        
+        {/* Improved Chat Input Area */}
+        <div className="chat-input-area" style={{ padding: '20px', borderTop: '1px solid #e2e8f0', background: '#f8fafc', width: '100%' }}>
+          <div style={{ position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'flex-end', background: 'white', border: '1px solid #cbd5e1', borderRadius: '12px', padding: '12px 16px', boxShadow: '0 2px 6px rgba(0,0,0,0.02)', transition: 'border-color 0.2s, box-shadow 0.2s', flex: 1 }}
+               onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--primary-soft)'; }}
+               onBlur={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.02)'; }}
           >
-            <FiSend size={16} /> Send to Agent
-          </button>
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              placeholder={currentTurn >= maxTurns ? 'Max prompt turns reached' : 'Describe what the agent should build or fix...'}
+              disabled={currentTurn >= maxTurns || isStreaming}
+              className="chat-textarea auto-resize"
+              id="prompt-input"
+              rows={1}
+              style={{ flex: 1, border: 'none', resize: 'none', padding: '0', fontSize: '15px', lineHeight: '1.5', color: '#0f172a', background: 'transparent', outline: 'none', minHeight: '24px', maxHeight: '150px' }}
+            />
+            <div style={{ display: 'flex', marginLeft: '12px', flexShrink: 0 }}>
+              <button
+                onClick={handleSend}
+                disabled={!input.trim() || currentTurn >= maxTurns || isStreaming}
+                className="btn-primary send-btn"
+                id="send-prompt-btn"
+                style={{ borderRadius: '8px', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, fontSize: '14px', height: '36px', opacity: isStreaming ? 0.7 : 1 }}
+              >
+                {isStreaming ? (
+                  <><FiCpu className="spin-icon" size={16} /> <span className="send-text">Working...</span></>
+                ) : (
+                  <><FiSend size={16} /> <span className="send-text">Send</span></>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

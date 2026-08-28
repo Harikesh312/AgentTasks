@@ -49,9 +49,7 @@ export default function Navbar() {
           <Link to="/questions" className={`nav-link ${isActive('/questions') ? 'active' : ''}`}>Problems</Link>
           <Link to="/contest" className={`nav-link ${isActive('/contest') ? 'active' : ''}`}>Contest</Link>
           <Link to="/discuss" className={`nav-link ${isActive('/discuss') ? 'active' : ''}`}>Discuss</Link>
-          {isLoggedIn && (
-            <Link to="/profile" className={`nav-link ${isActive('/profile') ? 'active' : ''}`}>Profile</Link>
-          )}
+          <Link to="/profile" className={`nav-link ${isActive('/profile') ? 'active' : ''}`}>Profile</Link>
         </div>
 
         <div className="navbar-actions">
