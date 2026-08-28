@@ -5,7 +5,7 @@ import { saveAs } from 'file-saver';
 import {
   FiMessageSquare, FiFolder, FiMonitor,
   FiAlertTriangle, FiBarChart2, FiCheckCircle, FiX,
-  FiClipboard, FiSettings, FiImage, FiCheck, FiArrowLeft, FiArrowRight, FiClock, FiCode, FiZap, FiChevronDown, FiChevronUp, FiChevronLeft, FiChevronRight, FiCircle
+  FiClipboard, FiSettings, FiImage, FiCheck, FiArrowLeft, FiArrowRight, FiClock, FiCode, FiZap, FiChevronDown, FiChevronUp, FiChevronLeft, FiChevronRight, FiCircle, FiMessageCircle
 } from 'react-icons/fi';
 import questions from '../data/questions';
 import mockAgentRuns from '../data/mockAgentRuns';
@@ -14,6 +14,7 @@ import FileExplorer from '../components/FileExplorer';
 import PreviewEvaluation from '../components/PreviewEvaluation';
 import EvaluationCard from '../components/EvaluationCard';
 import QuestionDiscussTab from '../components/QuestionDiscussTab';
+import ChatsTab from '../components/ChatsTab';
 import './QuestionDetailPage.css';
 
 export default function QuestionDetailPage() {
@@ -29,6 +30,7 @@ export default function QuestionDetailPage() {
   const [evaluation, setEvaluation] = useState(null);
   const [toast, setToast] = useState(null);
   const [tipsExpanded, setTipsExpanded] = useState(false);
+  const [pendingChatId, setPendingChatId] = useState(null);
 
   // Preview & Evaluation state (Part 4)
   const [previewEvaluation, setPreviewEvaluation] = useState(null);
@@ -139,6 +141,7 @@ export default function QuestionDetailPage() {
 
   const tabs = [
     { key: 'chat', label: 'Prompt Chat', icon: <FiMessageSquare size={18} /> },
+    { key: 'chats', label: 'Chats', icon: <FiMessageCircle size={18} /> },
     { key: 'files', label: 'Files', icon: <FiFolder size={18} /> },
     { key: 'preview', label: 'Preview', icon: <FiMonitor size={18} /> },
     { key: 'discuss', label: 'Discuss', icon: <FiMessageSquare size={18} /> },
@@ -297,6 +300,22 @@ export default function QuestionDetailPage() {
                 questionContext={questionContext}
                 onOpenPreview={() => setActiveTab('preview')}
                 onOpenFile={() => setActiveTab('files')}
+                questionId={question.id}
+                onChatLoaded={({ turns, files, previewHtml }) => {
+                  setCurrentTurn(turns);
+                  setCurrentFiles(files);
+                  setCurrentPreview(previewHtml);
+                  if (turns === 0) {
+                    setPreviewEvaluation(null);
+                    setPreviewEvalLoading(false);
+                    setLastGeneratedAt(null);
+                    setShowEval(false);
+                    setEvaluation(null);
+                  }
+                }}
+                onGoToChats={() => setActiveTab('chats')}
+                pendingChatId={pendingChatId}
+                onPendingChatConsumed={() => setPendingChatId(null)}
               />
             )}
             {activeTab === 'files' && (
@@ -323,6 +342,19 @@ export default function QuestionDetailPage() {
               <QuestionDiscussTab
                 questionId={question.id}
                 onTryPrompt={() => setActiveTab('chat')}
+              />
+            )}
+            {activeTab === 'chats' && (
+              <ChatsTab
+                questionId={question.id}
+                onOpenChat={(chatId) => {
+                  setPendingChatId(chatId);
+                  setActiveTab('chat');
+                }}
+                onNewChat={() => {
+                  setPendingChatId(null);
+                  setActiveTab('chat');
+                }}
               />
             )}
           </div>

@@ -35,37 +35,27 @@ const LOADING_STEPS = [
 ];
 
 /* ─── Iframe Renderer ─── */
-function LivePreview({ previewHtml, device }) {
-  const iframeRef = useRef(null);
-
-  useEffect(() => {
-    if (iframeRef.current && previewHtml) {
-      const iframe = iframeRef.current;
-      const doc = iframe.contentDocument || iframe.contentWindow.document;
-      doc.open();
-      doc.write(previewHtml);
-      doc.close();
-    }
-  }, [previewHtml]);
-
+function LivePreview({ previewHtml, device, onFullScreen }) {
   const widthMap = { desktop: '100%', tablet: '768px', mobile: '375px' };
 
   return (
-    <div className={`pe-live-frame device-view-${device}`}>
+    <div className="pe-live-frame" style={{ width: widthMap[device], margin: '0 auto', background: 'white', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       <div className="pe-browser-bar">
         <div className="pe-dots">
           <span style={{background:'#ef4444'}}></span>
           <span style={{background:'#f59e0b'}}></span>
           <span style={{background:'#10b981'}}></span>
         </div>
-        <div className="pe-browser-url">localhost:3000/preview</div>
+        <div className="pe-browser-url" style={{ marginLeft: '12px' }}>localhost:3000/preview</div>
+        <button className="pe-fullscreen-btn" onClick={onFullScreen} title="Full Screen" style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+          <FiMaximize size={16} />
+        </button>
       </div>
       <div className="pe-iframe-wrapper">
         <iframe
-          ref={iframeRef}
-          className="pe-iframe"
+          srcDoc={previewHtml}
+          className={`pe-iframe ${device}`}
           sandbox="allow-scripts allow-same-origin"
-          scrolling="no"
           title="Live Preview"
         />
       </div>
@@ -175,6 +165,10 @@ export default function PreviewEvaluation({
   const [expectedDevice, setExpectedDevice] = useState('desktop');
   const [actualDevice, setActualDevice] = useState('desktop');
   const [loadingStep, setLoadingStep] = useState(0);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isComparisonFullScreen, setIsComparisonFullScreen] = useState(false);
+  const [isExpectedFullScreen, setIsExpectedFullScreen] = useState(false);
+  const [isTotalFullScreen, setIsTotalFullScreen] = useState(false);
 
   // Resize logic
   const [leftWidth, setLeftWidth] = useState(50);
@@ -321,7 +315,7 @@ export default function PreviewEvaluation({
   };
 
   return (
-    <div className="pe-container">
+    <div className={`pe-container ${isTotalFullScreen ? 'pe-total-fullscreen' : ''}`}>
       <div className="pe-header-bar pe-header-bar-after">
         <h3 className="pe-heading">Preview</h3>
         <div className="pe-header-actions">
@@ -329,11 +323,24 @@ export default function PreviewEvaluation({
             <span className="pe-attempt-badge">Attempt {currentTurn}</span>
             {lastGeneratedAt && <span className="pe-last-gen">Generated <FiClock size={12}/> {lastGeneratedAt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>}
           </div>
-          <button className="btn-outline pe-btn-premium btn-sm" onClick={() => setActiveTab('chat')}><FiRefreshCw size={14} /> Regenerate</button>
+          <button className="btn-outline pe-btn-premium btn-sm" onClick={() => setIsTotalFullScreen(!isTotalFullScreen)}>
+            {isTotalFullScreen ? <FiX size={14} /> : <FiTrendingUp size={14} />} {isTotalFullScreen ? 'Close Dashboard' : 'Dashboard'}
+          </button>
+          <button className="btn-outline pe-btn-premium btn-sm" onClick={() => setIsComparisonFullScreen(true)}>
+            <FiMaximize size={14} /> Full Screen
+          </button>
+          <button className="btn-outline pe-btn-premium btn-sm" style={{ padding: '8px 12px' }} title="Regenerate" onClick={() => setActiveTab('chat')}>
+            <FiRefreshCw size={16} />
+          </button>
         </div>
       </div>
 
-      <div className="pe-comparison-split" ref={containerRef}>
+      <div className={`pe-comparison-split ${isComparisonFullScreen ? 'fullscreen-mode' : ''}`} ref={containerRef}>
+        {isComparisonFullScreen && (
+           <button className="pe-close-fullscreen-comparison" onClick={() => setIsComparisonFullScreen(false)}>
+              <FiX size={20} /> Close Full Screen
+           </button>
+        )}
         <div className="pe-panel pe-panel-expected" style={{ width: `calc(${leftWidth}% - 8px)`, transition: isDragging.current ? 'none' : 'width 0.3s ease' }}>
           <span className="pe-panel-label-top">Expected Output</span>
           <div className="pe-panel-header-premium">
@@ -344,9 +351,20 @@ export default function PreviewEvaluation({
             </div>
             <DeviceToggle device={expectedDevice} onDeviceChange={setExpectedDevice} />
           </div>
-          <div className="pe-frame-wrapper">
-             <div className={`pe-ref-frame device-view-${expectedDevice}`}>
-               {question.referenceImage ? <img src={question.referenceImage} alt="Reference" className="pe-ref-img" /> : <div className="pe-ref-empty">No reference</div>}
+          <div className="pe-frame-wrapper" style={{ display: 'flex', justifyContent: 'center', padding: '16px' }}>
+             <div className="pe-ref-frame" style={{ width: { desktop: '100%', tablet: '768px', mobile: '375px' }[expectedDevice], margin: '0 auto', transition: 'width 0.3s', background: 'white', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+               <div className="pe-browser-bar">
+                 <div className="pe-dots">
+                   <span style={{background:'#ef4444'}}></span>
+                   <span style={{background:'#f59e0b'}}></span>
+                   <span style={{background:'#10b981'}}></span>
+                 </div>
+                 <div className="pe-browser-url" style={{ marginLeft: '12px' }}>target-design.png</div>
+                 <button className="pe-fullscreen-btn" onClick={() => setIsExpectedFullScreen(true)} title="Full Screen" style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+                   <FiMaximize size={16} />
+                 </button>
+               </div>
+               {question.referenceImage ? <img src={question.referenceImage} alt="Reference" className="pe-ref-img" style={{ flex: 1, objectFit: 'contain' }} /> : <div className="pe-ref-empty">No reference</div>}
              </div>
           </div>
         </div>
@@ -367,155 +385,226 @@ export default function PreviewEvaluation({
             </div>
             <DeviceToggle device={actualDevice} onDeviceChange={setActualDevice} />
           </div>
-          <div className="pe-frame-wrapper">
-             <LivePreview previewHtml={currentPreview} device={actualDevice} />
-             <div className="pe-frame-hover-actions">
-               <button className="btn-outline pe-btn-premium"><FiMonitor size={16} /> Inspect Output</button>
+          <div className="pe-frame-wrapper" style={{ display: 'flex', justifyContent: 'center', padding: '16px' }}>
+             <LivePreview previewHtml={currentPreview} device={actualDevice} onFullScreen={() => setIsFullScreen(true)} />
+          </div>
+        </div>
+      </div>
+
+      {hasEval && isTotalFullScreen && (
+        <div className="pe-dashboard-bottom">
+           <div className="pe-dashboard-row">
+              <div className="pe-dashboard-col-small">
+                 <div className="pe-section-card">
+                   <h4 className="pe-subheading pe-center-text" style={{ marginBottom: '24px' }}>OVERALL MATCH</h4>
+                   <ScoreCircle score={ev.score} />
+                 </div>
+              </div>
+              <div className="pe-dashboard-col-large">
+                 <div className="pe-section-card">
+                   <h4 className="pe-subheading" style={{ marginBottom: '24px' }}>EVALUATION METRICS</h4>
+                   <div className="pe-metrics-grid" style={{ marginTop: 0 }}>
+                     {metrics.map((m, i) => (
+                       <div key={m.label} className={`pe-metric-card theme-${m.theme}`}>
+                         <div className="pe-metric-card-content">
+                           <div className={`pe-icon-container ${m.theme}-theme pe-metric-card-icon`}>
+                             <m.icon size={22} />
+                           </div>
+                           <div className="pe-metric-info">
+                             <span className="pe-metric-name">{m.label}</span>
+                             <span className="pe-metric-val">{m.value}%</span>
+                           </div>
+                         </div>
+                         <div className="pe-metric-bar-bg">
+                           <div className={`pe-metric-bar-fill bg-${m.theme}`} style={{ width: `${m.value}%` }} />
+                         </div>
+                         <p className="pe-metric-card-desc">{m.desc}</p>
+                       </div>
+                     ))}
+                   </div>
+                 </div>
+              </div>
+           </div>
+
+           {(ev.matchedPoints?.length > 0 || ev.improvementPoints?.length > 0) && (
+             <div className="pe-dashboard-row">
+                {ev.matchedPoints?.length > 0 && (
+                  <div className="pe-dashboard-col">
+                     <div className="pe-section-card pe-success-section" style={{ marginTop: 0 }}>
+                       <h4 className="pe-subheading pe-success-heading" style={{ marginBottom: '24px' }}><FiCheckCircle size={18} /> WHAT MATCHED WELL</h4>
+                       <div className="pe-feedback-grid">
+                         {ev.matchedPoints.map((p, i) => (
+                           <div key={i} className="pe-feedback-card pe-feedback-success">
+                             <div className="pe-icon-container green-theme"><FiCheckCircle size={22} /></div>
+                             <div className="pe-feedback-card-content">
+                               <h5 className="pe-feedback-card-title">{p.split(' ').slice(0, 4).join(' ')}</h5>
+                               <p className="pe-feedback-card-text">{p}</p>
+                             </div>
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                  </div>
+                )}
+                {ev.improvementPoints?.length > 0 && (
+                  <div className="pe-dashboard-col">
+                     <div className="pe-section-card pe-warning-section" style={{ marginTop: 0 }}>
+                       <h4 className="pe-subheading pe-warning-heading" style={{ marginBottom: '24px' }}><FiAlertTriangle size={18} /> WHAT COULD BE IMPROVED</h4>
+                       <div className="pe-feedback-grid">
+                         {ev.improvementPoints.map((p, i) => (
+                           <div key={i} className="pe-feedback-card pe-feedback-warning">
+                             <div className="pe-icon-container amber-theme"><FiAlertTriangle size={22} /></div>
+                             <div className="pe-feedback-card-content">
+                               <h5 className="pe-feedback-card-title">{p.split(' ').slice(0, 4).join(' ')}</h5>
+                               <p className="pe-feedback-card-text">{p}</p>
+                             </div>
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                  </div>
+                )}
              </div>
-          </div>
-        </div>
-      </div>
+           )}
 
-      {hasEval && (
-        <>
-          <div className="pe-section pe-separator-top">
-            <div className="pe-score-row">
-              <div className="pe-score-container">
-                <h4 className="pe-subheading pe-center-text">OVERALL MATCH</h4>
-                <ScoreCircle score={ev.score} />
-              </div>
-            </div>
-          </div>
-
-          <div className="pe-section pe-separator-top">
-            <div className="pe-section-header">
-              <h4 className="pe-subheading">EVALUATION METRICS</h4>
-            </div>
-        <div className="pe-metrics-grid">
-          {metrics.map((m, i) => (
-            <div key={m.label} className={`pe-metric-card theme-${m.theme}`}>
-              <div className="pe-metric-card-content">
-                <div className={`pe-icon-container ${m.theme}-theme pe-metric-card-icon`}>
-                  <m.icon size={22} />
-                </div>
-                <div className="pe-metric-info">
-                  <span className="pe-metric-name">{m.label}</span>
-                  <span className="pe-metric-val">{m.value}%</span>
-                </div>
-              </div>
-              <div className="pe-metric-bar-bg">
-                <div className={`pe-metric-bar-fill bg-${m.theme}`} style={{ width: `${m.value}%` }} />
-              </div>
-              <p className="pe-metric-card-desc">{m.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {ev.matchedPoints && ev.matchedPoints.length > 0 && (
-        <div className="pe-section pe-success-section pe-separator-top">
-          <div className="pe-section-header">
-            <h4 className="pe-subheading pe-success-heading"><FiCheckCircle size={18} /> WHAT MATCHED WELL</h4>
-          </div>
-          <div className="pe-feedback-grid">
-            {ev.matchedPoints.map((p, i) => {
-              const title = p.split(' ').slice(0, 4).join(' ');
-              return (
-                <div key={i} className="pe-feedback-card pe-feedback-success">
-                  <div className="pe-icon-container green-theme"><FiCheckCircle size={22} /></div>
-                  <div className="pe-feedback-card-content">
-                    <h5 className="pe-feedback-card-title">{title}</h5>
-                    <p className="pe-feedback-card-text">{p}</p>
+           <div className="pe-dashboard-row">
+             <div className="pe-dashboard-col">
+               <div className="pe-section-card">
+                  <h4 className="pe-subheading" style={{ marginBottom: '24px' }}>DIFF HIGHLIGHTS</h4>
+                  <div className="pe-diff-legend" style={{ marginBottom: '16px' }}>
+                    <span className="pe-legend-item"><span className="pe-legend-dot pe-dot-matched" /> Matched</span>
+                    <span className="pe-legend-item"><span className="pe-legend-dot pe-dot-different" /> Different</span>
+                    <span className="pe-legend-item"><span className="pe-legend-dot pe-dot-missing" /> Missing</span>
                   </div>
-                </div>
-              );
-            })}
+                  <div className="pe-diff-grid">
+                    {question.requiredContent && Object.keys(question.requiredContent).map((key, i) => {
+                      const status = getContentStatus(key);
+                      return (
+                        <div key={`rc-${i}`} className={`pe-diff-card pe-diff-${status}`}>
+                          <div className="pe-diff-card-icon">
+                            {status === 'matched' && <FiCheckCircle size={20} />}
+                            {status === 'different' && <FiAlertTriangle size={20} />}
+                            {status === 'missing' && <FiX size={20} />}
+                          </div>
+                          <div className="pe-diff-card-content">
+                            <h6 className="pe-diff-card-title">{key}</h6>
+                            <span className={`pe-diff-status-label pe-status-${status}`}>{status.toUpperCase()}</span>
+                          </div>
+                          <p className="pe-diff-card-desc">Explicit copy content requirement.</p>
+                        </div>
+                      );
+                    })}
+                    {question.requirements.map((req, i) => {
+                      const status = getRequirementStatus(req);
+                      return (
+                        <div key={`req-${i}`} className={`pe-diff-card pe-diff-${status}`}>
+                          <div className="pe-diff-card-icon">
+                            {status === 'matched' && <FiCheckCircle size={20} />}
+                            {status === 'different' && <FiAlertTriangle size={20} />}
+                            {status === 'missing' && <FiX size={20} />}
+                          </div>
+                          <div className="pe-diff-card-content">
+                            <h6 className="pe-diff-card-title">{req.length > 45 ? req.substring(0, 45) + '...' : req}</h6>
+                            <span className={`pe-diff-status-label pe-status-${status}`}>{status.toUpperCase()}</span>
+                          </div>
+                          <p className="pe-diff-card-desc">{req}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+               </div>
+             </div>
+           </div>
+
+           <div className="pe-dashboard-row">
+             <div className="pe-dashboard-col">
+               <div className="pe-section-card pe-coach-card" style={{ marginTop: 0 }}>
+                  <div className="pe-coach-header">
+                    <div className="pe-icon-container purple-gradient"><FiTrendingUp size={24} color="white" /></div>
+                    <h4>AI Coach Feedback</h4>
+                  </div>
+                  <div className="pe-coach-content">
+                    <p className="pe-coach-text">{ev.feedback}</p>
+                    <button className="btn-primary pe-btn-premium pe-coach-btn" onClick={() => setActiveTab('chat')}>
+                      <FiMessageSquare size={16} /> Improve with Prompt
+                    </button>
+                  </div>
+               </div>
+             </div>
+           </div>
+        </div>
+      )}
+
+      {/* FULL SCREEN MODAL */}
+      {isFullScreen && (
+        <div className="pe-fullscreen-overlay">
+          <div className="pe-fullscreen-modal">
+            <div className="pe-fullscreen-header">
+              <div className="pe-fullscreen-title">
+                <FiMonitor size={18} /> Agent Generated Preview (Full Screen)
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <DeviceToggle device={actualDevice} onDeviceChange={setActualDevice} />
+                <button className="pe-fullscreen-close" onClick={() => setIsFullScreen(false)} title="Close">
+                  <FiX size={20} />
+                </button>
+              </div>
+            </div>
+            <div className="pe-fullscreen-content" style={{ display: 'flex', justifyContent: 'center', background: '#f8fafc' }}>
+              <div style={{ 
+                width: { desktop: '100%', tablet: '768px', mobile: '375px' }[actualDevice], 
+                height: '100%',
+                background: 'white',
+                boxShadow: '0 0 15px rgba(0,0,0,0.1)',
+                transition: 'width 0.3s ease'
+              }}>
+                <iframe
+                  srcDoc={currentPreview}
+                  className="pe-fullscreen-iframe"
+                  sandbox="allow-scripts allow-same-origin"
+                  title="Full Screen Preview"
+                />
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {ev.improvementPoints && ev.improvementPoints.length > 0 && (
-        <div className="pe-section pe-warning-section pe-separator-top">
-          <div className="pe-section-header">
-            <h4 className="pe-subheading pe-warning-heading"><FiAlertTriangle size={18} /> WHAT COULD BE IMPROVED</h4>
-          </div>
-          <div className="pe-feedback-grid">
-            {ev.improvementPoints.map((p, i) => {
-              const title = p.split(' ').slice(0, 4).join(' ');
-              return (
-                <div key={i} className="pe-feedback-card pe-feedback-warning">
-                  <div className="pe-icon-container amber-theme"><FiAlertTriangle size={22} /></div>
-                  <div className="pe-feedback-card-content">
-                    <h5 className="pe-feedback-card-title">{title}</h5>
-                    <p className="pe-feedback-card-text">{p}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      <div className="pe-section pe-separator-top">
-        <div className="pe-section-header">
-          <h4 className="pe-subheading">DIFF HIGHLIGHTS</h4>
-        </div>
-        <div className="pe-diff-legend">
-          <span className="pe-legend-item"><span className="pe-legend-dot pe-dot-matched" /> Matched</span>
-          <span className="pe-legend-item"><span className="pe-legend-dot pe-dot-different" /> Different</span>
-          <span className="pe-legend-item"><span className="pe-legend-dot pe-dot-missing" /> Missing</span>
-        </div>
-        <div className="pe-diff-grid">
-          {question.requiredContent && Object.keys(question.requiredContent).map((key, i) => {
-            const status = getContentStatus(key);
-            return (
-              <div key={`rc-${i}`} className={`pe-diff-card pe-diff-${status}`}>
-                <div className="pe-diff-card-icon">
-                  {status === 'matched' && <FiCheckCircle size={20} />}
-                  {status === 'different' && <FiAlertTriangle size={20} />}
-                  {status === 'missing' && <FiX size={20} />}
-                </div>
-                <div className="pe-diff-card-content">
-                  <h6 className="pe-diff-card-title">{key}</h6>
-                  <span className={`pe-diff-status-label pe-status-${status}`}>{status.toUpperCase()}</span>
-                </div>
-                <p className="pe-diff-card-desc">Explicit copy content requirement.</p>
+      {/* EXPECTED OUTPUT FULL SCREEN MODAL */}
+      {isExpectedFullScreen && (
+        <div className="pe-fullscreen-overlay">
+          <div className="pe-fullscreen-modal">
+            <div className="pe-fullscreen-header">
+              <div className="pe-fullscreen-title">
+                <FiImage size={18} /> Expected Output (Full Screen)
               </div>
-            );
-          })}
-          {question.requirements.map((req, i) => {
-            const status = getRequirementStatus(req);
-            return (
-              <div key={`req-${i}`} className={`pe-diff-card pe-diff-${status}`}>
-                <div className="pe-diff-card-icon">
-                  {status === 'matched' && <FiCheckCircle size={20} />}
-                  {status === 'different' && <FiAlertTriangle size={20} />}
-                  {status === 'missing' && <FiX size={20} />}
-                </div>
-                <div className="pe-diff-card-content">
-                  <h6 className="pe-diff-card-title">{req.length > 45 ? req.substring(0, 45) + '...' : req}</h6>
-                  <span className={`pe-diff-status-label pe-status-${status}`}>{status.toUpperCase()}</span>
-                </div>
-                <p className="pe-diff-card-desc">{req}</p>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <DeviceToggle device={expectedDevice} onDeviceChange={setExpectedDevice} />
+                <button className="pe-fullscreen-close" onClick={() => setIsExpectedFullScreen(false)} title="Close">
+                  <FiX size={20} />
+                </button>
               </div>
-            );
-          })}
+            </div>
+            <div className="pe-fullscreen-content" style={{ display: 'flex', justifyContent: 'center', background: '#f8fafc' }}>
+              <div style={{ 
+                width: { desktop: '100%', tablet: '768px', mobile: '375px' }[expectedDevice], 
+                height: '100%',
+                background: 'white',
+                boxShadow: '0 0 15px rgba(0,0,0,0.1)',
+                transition: 'width 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                {question.referenceImage ? (
+                  <img src={question.referenceImage} alt="Reference" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                ) : (
+                  <div className="pe-ref-empty">No reference</div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div className="pe-coach-card pe-separator-top">
-        <div className="pe-coach-header">
-          <div className="pe-icon-container purple-gradient"><FiTrendingUp size={24} color="white" /></div>
-          <h4>AI Coach Feedback</h4>
-        </div>
-        <div className="pe-coach-content">
-          <p className="pe-coach-text">{ev.feedback}</p>
-          <button className="btn-primary pe-btn-premium pe-coach-btn" onClick={() => setActiveTab('chat')}>
-            <FiMessageSquare size={16} /> Improve with Prompt
-          </button>
-        </div>
-      </div>
-      </>
       )}
     </div>
   );
