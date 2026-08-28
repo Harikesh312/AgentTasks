@@ -34,6 +34,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/agent', agentRoutes);
 app.use('/api/discuss', discussRoutes);
+app.use('/api/chats', chatRoutes);
 
 // Database Connection
 mongoose

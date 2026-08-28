@@ -220,6 +220,65 @@
   animation: slow-spin 1s linear infinite;
 }
 
+.sidebar-chat-item-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.delete-confirm-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 0 12px 8px 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  animation: slideDown 0.2s ease-out;
+}
+
+.delete-confirm-card p {
+  margin: 0 0 12px 0;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.delete-confirm-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.delete-cancel-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.delete-cancel-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.delete-confirm-btn {
+  background: #ef4444;
+  border: none;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.delete-confirm-btn:hover {
+  background: #dc2626;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* ─── Empty / Loading States ─── */
 .sidebar-loading {
   display: flex;

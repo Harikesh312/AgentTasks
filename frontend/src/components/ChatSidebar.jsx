@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FiPlus, FiMessageCircle, FiTrash2, FiClock, FiChevronLeft, FiLoader } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import './ChatSidebar.css';
@@ -25,6 +26,7 @@ export default function ChatSidebar({ questionId, activeChatId, onSelectChat, on
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const getHeaders = () => {
     const headers = { 'Content-Type': 'application/json' };
@@ -59,8 +61,19 @@ export default function ChatSidebar({ questionId, activeChatId, onSelectChat, on
     }
   };
 
-  const handleDelete = async (e, chatId) => {
+  const handleDeleteClick = (e, chatId) => {
     e.stopPropagation();
+    setConfirmDeleteId(chatId);
+  };
+
+  const cancelDelete = (e) => {
+    e.stopPropagation();
+    setConfirmDeleteId(null);
+  };
+
+  const confirmDelete = async (e, chatId) => {
+    e.stopPropagation();
+    setConfirmDeleteId(null);
     setDeletingId(chatId);
     try {
       const res = await fetch(`${API_URL}/api/chats/${chatId}`, {
@@ -120,11 +133,11 @@ export default function ChatSidebar({ questionId, activeChatId, onSelectChat, on
             </div>
           ) : (
             chats.map((chat) => (
-              <div
-                key={chat._id}
-                className={`sidebar-chat-item ${activeChatId === chat._id ? 'active' : ''}`}
-                onClick={() => onSelectChat(chat._id)}
-              >
+              <div key={chat._id} className="sidebar-chat-item-wrapper">
+                <div
+                  className={`sidebar-chat-item ${activeChatId === chat._id ? 'active' : ''}`}
+                  onClick={() => onSelectChat(chat._id)}
+                >
                 <div className="chat-item-content">
                   <div className="chat-item-title">{chat.title}</div>
                   <div className="chat-item-meta">
@@ -137,19 +150,34 @@ export default function ChatSidebar({ questionId, activeChatId, onSelectChat, on
                     <div className="chat-item-preview">{chat.lastMessage}</div>
                   )}
                 </div>
-                <button
-                  className={`chat-item-delete ${deletingId === chat._id ? 'deleting' : ''}`}
-                  onClick={(e) => handleDelete(e, chat._id)}
-                  title="Delete chat"
-                  disabled={deletingId === chat._id}
-                >
-                  <FiTrash2 size={14} />
-                </button>
+                  <button
+                    className={`chat-item-delete ${deletingId === chat._id ? 'deleting' : ''}`}
+                    onClick={(e) => handleDeleteClick(e, chat._id)}
+                    title="Delete chat"
+                    disabled={deletingId === chat._id}
+                  >
+                    <FiTrash2 size={14} />
+                  </button>
+                </div>
               </div>
             ))
           )}
         </div>
       </div>
+
+      {confirmDeleteId && createPortal(
+        <div className="global-modal-overlay" onClick={cancelDelete}>
+          <div className="global-modal-card" onClick={(e) => e.stopPropagation()}>
+            <h3>Delete Chat</h3>
+            <p>Are you sure you want to delete this chat? This action cannot be undone.</p>
+            <div className="global-modal-actions">
+              <button className="btn-outline" onClick={cancelDelete}>Cancel</button>
+              <button className="btn-primary" style={{ background: '#ef4444' }} onClick={(e) => confirmDelete(e, confirmDeleteId)}>Delete</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

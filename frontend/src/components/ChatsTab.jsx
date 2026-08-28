@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FiPlus, FiMessageCircle, FiTrash2, FiClock, FiLoader, FiMessageSquare, FiArrowRight, FiSearch } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import './ChatsTab.css';
@@ -35,6 +36,7 @@ export default function ChatsTab({ questionId, onOpenChat, onNewChat }) {
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const getHeaders = () => {
@@ -69,8 +71,19 @@ export default function ChatsTab({ questionId, onOpenChat, onNewChat }) {
     }
   };
 
-  const handleDelete = async (e, chatId) => {
+  const handleDeleteClick = (e, chatId) => {
     e.stopPropagation();
+    setConfirmDeleteId(chatId);
+  };
+
+  const cancelDelete = (e) => {
+    e.stopPropagation();
+    setConfirmDeleteId(null);
+  };
+
+  const confirmDelete = async (e, chatId) => {
+    e.stopPropagation();
+    setConfirmDeleteId(null);
     setDeletingId(chatId);
     try {
       const res = await fetch(`${API_URL}/api/chats/${chatId}`, {
@@ -193,7 +206,7 @@ export default function ChatsTab({ questionId, onOpenChat, onNewChat }) {
               <div className="chats-card-actions">
                 <button
                   className={`chats-card-delete ${deletingId === chat._id ? 'deleting' : ''}`}
-                  onClick={(e) => handleDelete(e, chat._id)}
+                  onClick={(e) => handleDeleteClick(e, chat._id)}
                   title="Delete chat"
                   disabled={deletingId === chat._id}
                 >
@@ -207,6 +220,20 @@ export default function ChatsTab({ questionId, onOpenChat, onNewChat }) {
           ))
         )}
       </div>
+
+      {confirmDeleteId && createPortal(
+        <div className="global-modal-overlay" onClick={cancelDelete}>
+          <div className="global-modal-card" onClick={(e) => e.stopPropagation()}>
+            <h3>Delete Chat</h3>
+            <p>Are you sure you want to delete this chat? This action cannot be undone.</p>
+            <div className="global-modal-actions">
+              <button className="btn-outline" onClick={cancelDelete}>Cancel</button>
+              <button className="btn-primary" style={{ background: '#ef4444' }} onClick={(e) => confirmDelete(e, confirmDeleteId)}>Delete</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

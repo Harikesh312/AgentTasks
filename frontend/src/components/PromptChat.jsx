@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { FiUser, FiCpu, FiSend, FiMessageSquare, FiCode, FiFile, FiChevronDown, FiChevronRight, FiCopy, FiCheck, FiSearch, FiLayout, FiZap, FiFolder, FiCheckCircle, FiAlertTriangle, FiClock, FiExternalLink, FiPlus, FiMoreVertical, FiEdit2, FiTrash2, FiMenu } from 'react-icons/fi';
+import { FiUser, FiCpu, FiSend, FiMessageSquare, FiCode, FiFile, FiChevronDown, FiChevronRight, FiCopy, FiCheck, FiSearch, FiLayout, FiZap, FiFolder, FiCheckCircle, FiAlertTriangle, FiClock, FiExternalLink, FiPlus, FiMoreVertical, FiEdit2, FiTrash2, FiMenu, FiArrowUp, FiLoader } from 'react-icons/fi';
 import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useAuth } from '../context/AuthContext';
 import ChatSidebar from './ChatSidebar';
 import ScaledPreview from './ScaledPreview';
@@ -22,43 +24,107 @@ const timeAgo = (dateStr) => {
   return `${Math.floor(days / 7)} weeks ago`;
 };
 
-const PHASE_CONFIG = {
-  analyzing: {
-    icon: <FiSearch size={14} />,
-    label: 'Analyzing',
-    color: '#8b5cf6',
-    messages: ['Understanding your request...', 'Analyzing requirements...', 'Breaking down the task...'],
-  },
-  planning: {
-    icon: <FiLayout size={14} />,
-    label: 'Planning',
-    color: '#3b82f6',
-    messages: ['Planning component structure...', 'Designing the architecture...', 'Organizing the layout...'],
-  },
-  generating: {
-    icon: <FiZap size={14} />,
-    label: 'Generating',
-    color: '#f59e0b',
-    messages: ['Writing code...', 'Generating components...', 'Building your project...'],
-  },
-  creating_files: {
-    icon: <FiFolder size={14} />,
-    label: 'Creating Files',
-    color: '#10b981',
-    messages: ['Packaging files...', 'Creating file structure...', 'Finalizing output...'],
-  },
-  complete: {
-    icon: <FiCheckCircle size={14} />,
-    label: 'Complete',
-    color: '#10b981',
-    messages: ['Done!'],
-  },
-  error: {
-    icon: <FiAlertTriangle size={14} />,
-    label: 'Error',
-    color: '#ef4444',
-    messages: ['Something went wrong'],
-  },
+const PHASE_LABELS = {
+  analyzing: 'Analyzing requirements',
+  planning: 'Planning the architecture',
+  generating: 'Generating code',
+  creating_files: 'Creating files',
+  complete: 'Finalizing',
+  error: 'An error occurred',
+};
+
+const MarkdownRenderer = ({ content }) => {
+  return (
+    <ReactMarkdown
+      components={{
+        code({ node, inline, className, children, ...props }) {
+          const match = /language-(\w+)/.exec(className || '');
+          return !inline && match ? (
+            <SyntaxHighlighter
+              style={vs}
+              language={match[1]}
+              PreTag="div"
+              customStyle={{ margin: '1em 0', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#ffffff', fontSize: '0.95em', padding: '16px' }}
+              {...props}
+            >
+              {String(children).replace(/\n$/, '')}
+            </SyntaxHighlighter>
+          ) : (
+            <code className={className} {...props}>
+              {children}
+            </code>
+          );
+        }
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+};
+
+const formatPartialJSONToMarkdown = (jsonString) => {
+  if (!jsonString) return '';
+  if (!jsonString.trim().startsWith('{')) return jsonString;
+
+  let markdown = '';
+  
+  const expMatch = jsonString.match(/"explanation"\s*:\s*"([\s\S]*?)(?="\s*,\s*"files"|"\s*\})/);
+  let explanation = '';
+  if (expMatch) {
+    explanation = expMatch[1];
+  } else {
+    const expStart = jsonString.match(/"explanation"\s*:\s*"/);
+    if (expStart) {
+      explanation = jsonString.substring(expStart.index + expStart[0].length);
+      if (explanation.endsWith('"')) explanation = explanation.slice(0, -1);
+    }
+  }
+  
+  if (explanation) {
+    markdown += explanation.replace(/\\n/g, '\n').replace(/\\"/g, '"') + '\n\n';
+  }
+
+  const filesStart = jsonString.indexOf('"files"');
+  if (filesStart !== -1) {
+    const filesStr = jsonString.substring(filesStart);
+    const fileKeyRegex = /"([^"]+\.[a-zA-Z0-9]+)"\s*:\s*"/g;
+    let match;
+    let fileMatches = [];
+    
+    while ((match = fileKeyRegex.exec(filesStr)) !== null) {
+      fileMatches.push({
+        name: match[1],
+        contentStart: match.index + match[0].length
+      });
+    }
+
+    for (let i = 0; i < fileMatches.length; i++) {
+      const file = fileMatches[i];
+      const nextFile = fileMatches[i + 1];
+      
+      let content = '';
+      if (nextFile) {
+        content = filesStr.substring(file.contentStart, nextFile.contentStart);
+        content = content.replace(/",\s*$/, '');
+      } else {
+        content = filesStr.substring(file.contentStart);
+        content = content.replace(/"\s*\}\s*\}?\s*$/, '');
+        if (content.endsWith('"')) content = content.slice(0, -1);
+      }
+
+      content = content.replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\t/g, '\t');
+      
+      const ext = file.name.split('.').pop() || '';
+      let lang = ext;
+      if (ext === 'js' || ext === 'jsx') lang = 'javascript';
+      if (ext === 'html') lang = 'html';
+      if (ext === 'css') lang = 'css';
+
+      markdown += `\n**${file.name}**\n\`\`\`${lang}\n${content}\n\`\`\`\n`;
+    }
+  }
+  
+  return markdown || jsonString;
 };
 
 function FileCard({ fileName, code, onOpen }) {
@@ -70,7 +136,7 @@ function FileCard({ fileName, code, onOpen }) {
   
   if (ext === 'html') { Icon = FiCode; color = '#e44d26'; }
   if (ext === 'css') { Icon = FiCode; color = '#264de4'; }
-  if (ext === 'js') { Icon = FiCode; color = '#f7df1e'; }
+  if (ext === 'js' || ext === 'jsx') { Icon = FiCode; color = '#f7df1e'; }
   
   return (
     <div className="chat-file-card" onClick={onOpen}>
@@ -88,43 +154,10 @@ function FileCard({ fileName, code, onOpen }) {
   );
 }
 
-function PhaseIndicator({ phase, isActive }) {
-  const config = PHASE_CONFIG[phase] || PHASE_CONFIG.analyzing;
-
-  return (
-    <div className={`phase-indicator ${isActive ? 'active' : 'done'}`}>
-      <div className="phase-icon-wrapper" style={{ '--phase-color': config.color }}>
-        <span className="phase-icon">{config.icon}</span>
-        {isActive && <div className="phase-ring" />}
-      </div>
-      <div className="phase-info">
-        <span className="phase-label" style={{ color: isActive ? config.color : 'var(--text-muted)' }}>
-          {config.label}
-        </span>
-        {isActive && (
-          <span className="phase-message">
-            {config.messages[0]}
-            <span className="phase-dots">
-              <span>.</span><span>.</span><span>.</span>
-            </span>
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function StreamingText({ text }) {
-  return (
-    <div className="streaming-text">
-      {text}
-      <span className="typing-cursor" />
-    </div>
-  );
-}
-
 export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, questionContext, onOpenPreview, onOpenFile, questionId, onChatLoaded, onGoToChats, pendingChatId, onPendingChatConsumed, onOpenFullPreview }) {
   const { user, memoryToken, isLoggedIn } = useAuth();
+  
+  // Chat content state
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -133,162 +166,20 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
   const [streamingText, setStreamingText] = useState('');
   const [conversationHistory, setConversationHistory] = useState('');
   
+  // Sidebar / Chat selection state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeChatId, setActiveChatId] = useState(null);
+
+  // Refs
   const chatEndRef = useRef(null);
   const textareaRef = useRef(null);
   const abortControllerRef = useRef(null);
-  const activeConversationRef = useRef(null);
-  const hasInitialized = useRef(false);
+  const activeChatIdRef = useRef(null);
 
-  // Sync ref with state
+  // Sync ref with state to prevent race conditions during streaming
   useEffect(() => {
-    activeConversationRef.current = activeConversationId;
-  }, [activeConversationId]);
-
-  // 1. Fetch Conversations
-  useEffect(() => {
-    const fetchConversations = async () => {
-      if (!questionId) return;
-      try {
-        setIsLoadingHistory(true);
-        const headers = {};
-        if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
-        
-        const res = await fetch(`${API_URL}/api/chat/conversations/${questionId}`, {
-          headers,
-          credentials: 'include'
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setConversations(data);
-          
-          if (!hasInitialized.current) {
-            hasInitialized.current = true;
-            if (data.length > 0 && !activeConversationId) {
-              handleSelectConversation(data[0]._id);
-            }
-          }
-        }
-      } catch (err) {
-        console.error('Failed to load history', err);
-      } finally {
-        setIsLoadingHistory(false);
-      }
-    };
-    fetchConversations();
-  }, [questionId, memoryToken]);
-
-  // 2. Select Conversation
-  const handleSelectConversation = async (convId) => {
-    try {
-      setActiveConversationId(convId);
-      setMessages([]);
-      setConversationHistory('');
-      
-      const headers = {};
-      if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
-
-      const res = await fetch(`${API_URL}/api/chat/conversations/${convId}/messages`, {
-        headers,
-        credentials: 'include'
-      });
-      const data = await res.json();
-      
-      const loadedMessages = data.messages.map(m => ({
-        id: m._id,
-        role: m.role,
-        content: m.content,
-        files: m.files,
-        previewHtml: m.previewHtml,
-        isError: m.isError
-      }));
-      setMessages(loadedMessages);
-      
-      let hist = '';
-      loadedMessages.forEach(m => {
-        if (m.role === 'user') hist += `User: ${m.content}\n`;
-        else hist += `Agent: ${m.content}\n\n`;
-      });
-      setConversationHistory(hist);
-      
-      const agentMessages = loadedMessages.filter(m => m.role === 'agent' && m.files);
-      const lastAgentMsg = agentMessages[agentMessages.length - 1];
-      const turnCount = loadedMessages.filter(m => m.role === 'user').length;
-      
-      if (onLoadConversation) {
-        onLoadConversation(
-          turnCount, 
-          lastAgentMsg ? lastAgentMsg.files : null, 
-          lastAgentMsg ? lastAgentMsg.previewHtml : null
-        );
-      }
-    } catch (err) {
-      console.error('Failed to load conversation', err);
-    }
-  };
-
-  // 3. New Chat
-  const handleNewChat = () => {
-    setActiveConversationId(null);
-    setMessages([]);
-    setConversationHistory('');
-    if (onLoadConversation) {
-      onLoadConversation(0, null, null);
-    }
-  };
-
-  // 4. Rename / Delete
-  const submitRename = async (id) => {
-    try {
-      if (!renameValue.trim()) {
-        setRenamingId(null);
-        return;
-      }
-      const headers = { 'Content-Type': 'application/json' };
-      if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
-
-      const res = await fetch(`${API_URL}/api/chat/conversations/${id}`, {
-        method: 'PATCH',
-        headers,
-        credentials: 'include',
-        body: JSON.stringify({ title: renameValue })
-      });
-      if (res.ok) {
-        setConversations(prev => prev.map(c => c._id === id ? { ...c, title: renameValue } : c));
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setRenamingId(null);
-    }
-  };
-
-  const handleDelete = async (e, id) => {
-    e.stopPropagation();
-    if (!window.confirm('Delete this conversation? This cannot be undone.')) return;
-    try {
-      const headers = {};
-      if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
-
-      const res = await fetch(`${API_URL}/api/chat/conversations/${id}`, {
-        method: 'DELETE',
-        headers,
-        credentials: 'include'
-      });
-      if (res.ok) {
-        setConversations(prev => prev.filter(c => c._id !== id));
-        if (activeConversationId === id) {
-          handleNewChat();
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-
-  // Chat history state
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeChatId, setActiveChatId] = useState(null);
+    activeChatIdRef.current = activeChatId;
+  }, [activeChatId]);
 
   const getHeaders = () => {
     const headers = { 'Content-Type': 'application/json' };
@@ -319,24 +210,124 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
     if (input === '') adjustTextareaHeight();
   }, [input]);
 
-  // Auto-load a chat when navigating from ChatsTab
+  // Handle loading chat from external navigation (e.g. from ChatsTab)
   useEffect(() => {
     if (pendingChatId && pendingChatId !== activeChatId) {
-      loadChat(pendingChatId);
+      handleSelectChat(pendingChatId);
       if (onPendingChatConsumed) onPendingChatConsumed();
     }
   }, [pendingChatId]);
 
-  // --- Chat Persistence Helpers ---
+  // Load a chat by ID
+  const loadChat = async (chatId) => {
+    if (!isLoggedIn) return;
+    try {
+      const res = await fetch(`${API_URL}/api/chats/${chatId}`, {
+        credentials: 'include',
+        headers: getHeaders(),
+      });
+      
+      if (res.ok) {
+        const chat = await res.json();
+        
+        // Restore messages
+        const restoredMessages = chat.messages.map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+          files: msg.files || null,
+          previewHtml: msg.previewHtml || null,
+          isError: msg.isError || false
+        }));
+        setMessages(restoredMessages);
+        setActiveChatId(chatId);
 
-  const createChat = async () => {
+        // Rebuild conversation history string for context
+        let history = '';
+        let turns = 0;
+        let lastFiles = null;
+        let lastPreview = null;
+
+        for (const msg of chat.messages) {
+          if (msg.role === 'user') {
+            history += `\nUser: ${msg.content}\n`;
+            turns++;
+          } else {
+            history += `Agent: ${msg.content || 'Generated code files.'}\n`;
+            if (msg.files) lastFiles = msg.files;
+            if (msg.previewHtml) lastPreview = msg.previewHtml;
+          }
+        }
+        setConversationHistory(history);
+
+        // Notify parent to restore state
+        if (onChatLoaded) {
+          onChatLoaded({
+            turns,
+            files: lastFiles,
+            previewHtml: lastPreview,
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load chat:', err);
+    }
+  };
+
+  // Auto-load the most recent chat on mount if no chat is active
+  useEffect(() => {
+    const fetchLatestChat = async () => {
+      if (!isLoggedIn || !questionId) return;
+      try {
+        const res = await fetch(`${API_URL}/api/chats?questionId=${questionId}`, {
+          credentials: 'include',
+          headers: getHeaders(),
+        });
+        if (res.ok) {
+          const chats = await res.json();
+          if (chats && chats.length > 0) {
+            loadChat(chats[0]._id);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to auto-load recent chat:', err);
+      }
+    };
+
+    if (!activeChatIdRef.current && !pendingChatId) {
+      fetchLatestChat();
+    }
+  }, [questionId, isLoggedIn, pendingChatId]);
+
+  const handleSelectChat = (chatId) => {
+    if (chatId === activeChatId) return;
+    loadChat(chatId);
+    setSidebarOpen(false); // Close sidebar on mobile after selection
+  };
+
+  const handleNewChat = () => {
+    setMessages([]);
+    setActiveChatId(null);
+    setConversationHistory('');
+    setStreamingText('');
+    setCurrentPhase(null);
+    setCompletedPhases([]);
+    setSidebarOpen(false);
+
+    // Notify parent to reset state
+    if (onChatLoaded) {
+      onChatLoaded({ turns: 0, files: null, previewHtml: null });
+    }
+  };
+
+  // Chat Persistence Helpers
+  const createChat = async (title) => {
     if (!isLoggedIn || !questionId) return null;
     try {
       const res = await fetch(`${API_URL}/api/chats`, {
         method: 'POST',
         credentials: 'include',
         headers: getHeaders(),
-        body: JSON.stringify({ questionId }),
+        body: JSON.stringify({ questionId, title }),
       });
       if (res.ok) {
         const chat = await res.json();
@@ -362,84 +353,6 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
     }
   };
 
-  const loadChat = async (chatId) => {
-    if (!isLoggedIn) return;
-    try {
-      const res = await fetch(`${API_URL}/api/chats/${chatId}`, {
-        credentials: 'include',
-        headers: getHeaders(),
-      });
-      if (res.ok) {
-        const chat = await res.json();
-        
-        // Restore messages
-        const restoredMessages = chat.messages.map((msg) => ({
-          role: msg.role,
-          content: msg.content,
-          files: msg.files || null,
-          previewHtml: msg.previewHtml || null,
-        }));
-        setMessages(restoredMessages);
-        setActiveChatId(chatId);
-
-        // Rebuild conversation history string for context
-        let history = '';
-        for (const msg of chat.messages) {
-          if (msg.role === 'user') {
-            history += `\nUser: ${msg.content}\n`;
-          } else {
-            history += `Agent: ${msg.content || 'Generated code files.'}\n`;
-          }
-        }
-        setConversationHistory(history);
-
-        // Count user messages as turns, find last files/preview
-        let turns = 0;
-        let lastFiles = null;
-        let lastPreview = null;
-        for (const msg of chat.messages) {
-          if (msg.role === 'user') turns++;
-          if (msg.files) lastFiles = msg.files;
-          if (msg.previewHtml) lastPreview = msg.previewHtml;
-        }
-
-        // Notify parent to restore state
-        if (onChatLoaded) {
-          onChatLoaded({
-            turns,
-            files: lastFiles,
-            previewHtml: lastPreview,
-          });
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load chat:', err);
-    }
-  };
-
-  const handleSelectChat = (chatId) => {
-    if (chatId === activeChatId) return;
-    loadChat(chatId);
-    setSidebarOpen(false);
-  };
-
-  const handleNewChat = () => {
-    setMessages([]);
-    setActiveChatId(null);
-    setConversationHistory('');
-    setStreamingText('');
-    setCurrentPhase(null);
-    setCompletedPhases([]);
-    setSidebarOpen(false);
-
-    // Notify parent to reset state
-    if (onChatLoaded) {
-      onChatLoaded({ turns: 0, files: null, previewHtml: null });
-    }
-  };
-
-  // --- End Chat Persistence ---
-
   const handleSend = useCallback(async () => {
     if (!input.trim() || currentTurn >= maxTurns || isStreaming) return;
 
@@ -452,48 +365,35 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
     setCompletedPhases([]);
     setStreamingText('');
 
+    let currentChatId = activeChatId;
+    const isNewChat = !currentChatId;
+
     // Ensure we have a chat ID for persistence
-    let chatId = activeChatId;
-    if (!chatId && isLoggedIn && questionId) {
-      chatId = await createChat();
-      if (chatId) setActiveChatId(chatId);
+    if (isNewChat && isLoggedIn && questionId) {
+      let newTitle = submittedPrompt.split('\n')[0].substring(0, 40);
+      if (newTitle.length === 40) newTitle += '...';
+      currentChatId = await createChat(newTitle);
+      if (currentChatId) setActiveChatId(currentChatId);
     }
 
     // Persist user message
-    if (chatId) {
-      appendMessage(chatId, { role: 'user', content: submittedPrompt });
+    if (currentChatId) {
+      await appendMessage(currentChatId, { role: 'user', content: submittedPrompt });
     }
-
-    // Create an agent message placeholder
-    const agentMsgId = Date.now();
 
     // Abort controller for cancellation
     abortControllerRef.current = new AbortController();
 
     try {
-      let currentConvId = activeConversationId;
-      const initialConvId = currentConvId;
+      const initialChatId = currentChatId;
       
-      const headers = { 'Content-Type': 'application/json' };
-      if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
-
-      // Save User Message immediately if it's an existing chat
-      if (currentConvId) {
-        await fetch(`${API_URL}/api/chat/conversations/${currentConvId}/messages`, {
-          method: 'POST',
-          headers,
-          credentials: 'include',
-          body: JSON.stringify({ role: 'user', content: submittedPrompt })
-        });
-      }
-
       const contextStr = questionContext
         ? `Question context: ${questionContext}\n\n${conversationHistory}`
         : conversationHistory;
 
       const response = await fetch(`${API_URL}/api/agent/generate`, {
         method: 'POST',
-        headers,
+        headers: getHeaders(),
         credentials: 'include',
         body: JSON.stringify({
           prompt: submittedPrompt,
@@ -513,7 +413,8 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
       let finalData = null;
 
       while (true) {
-        if (initialConvId !== activeConversationRef.current) {
+        // If user switched chat while streaming, abort the stream
+        if (initialChatId !== activeChatIdRef.current) {
           abortControllerRef.current.abort();
           return;
         }
@@ -542,13 +443,8 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
                   const errorMsg = `Error: ${data.message}`;
                   setMessages((prev) => [...prev, { role: 'agent', content: errorMsg, isError: true }]);
                   
-                  if (currentConvId) {
-                    await fetch(`${API_URL}/api/chat/conversations/${currentConvId}/messages`, {
-                      method: 'POST',
-                      headers,
-                      credentials: 'include',
-                      body: JSON.stringify({ role: 'agent', content: errorMsg, isError: true })
-                    });
+                  if (currentChatId) {
+                    await appendMessage(currentChatId, { role: 'agent', content: errorMsg, isError: true });
                   }
                   setIsStreaming(false);
                   return;
@@ -573,33 +469,10 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
         }
       }
 
-      // Process final response
-      if (initialConvId !== activeConversationRef.current) return;
+      // Check one more time before processing final response
+      if (initialChatId !== activeChatIdRef.current) return;
 
       if (finalData) {
-        // If this was a new chat, create the conversation and save user message NOW
-        if (!currentConvId) {
-          let newTitle = submittedPrompt.split('\n')[0].substring(0, 40);
-          if (newTitle.length === 40) newTitle += '...';
-          
-          const convRes = await fetch(`${API_URL}/api/chat/conversations`, {
-            method: 'POST',
-            headers,
-            credentials: 'include',
-            body: JSON.stringify({ questionId, title: newTitle })
-          });
-          const convData = await convRes.json();
-          currentConvId = convData._id;
-          setActiveConversationId(currentConvId);
-          
-          await fetch(`${API_URL}/api/chat/conversations/${currentConvId}/messages`, {
-            method: 'POST',
-            headers,
-            credentials: 'include',
-            body: JSON.stringify({ role: 'user', content: submittedPrompt })
-          });
-        }
-
         const agentContent = finalData.explanation || 'Here is what I built for you:';
         const agentMessage = {
           role: 'agent',
@@ -610,10 +483,10 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
         setMessages((prev) => [...prev, agentMessage]);
 
         // Persist agent message
-        if (chatId) {
-          appendMessage(chatId, {
+        if (currentChatId) {
+          await appendMessage(currentChatId, {
             role: 'agent',
-            content: finalData.explanation || 'Here is what I built for you:',
+            content: agentContent,
             files: finalData.files || null,
             previewHtml: finalData.previewHtml || null,
           });
@@ -622,7 +495,7 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
         // Update conversation history for follow-up context
         setConversationHistory(
           (prev) =>
-            `${prev}\nUser: ${submittedPrompt}\nAgent: ${finalData.explanation || 'Generated code files.'}\n`
+            `${prev}\nUser: ${submittedPrompt}\nAgent: ${agentContent}\n`
         );
 
         if (onAgentResponse) {
@@ -641,8 +514,8 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
         ]);
 
         // Persist agent message
-        if (chatId) {
-          appendMessage(chatId, { role: 'agent', content: fallbackContent });
+        if (currentChatId) {
+          await appendMessage(currentChatId, { role: 'agent', content: fallbackContent });
         }
 
         if (onAgentResponse) {
@@ -655,13 +528,8 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
       const errorMsg = `Error: ${error.message}`;
       setMessages((prev) => [...prev, { role: 'agent', content: errorMsg, isError: true }]);
       
-      if (activeConversationId) {
-        await fetch(`${API_URL}/api/chat/conversations/${activeConversationId}/messages`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...(memoryToken ? {'Authorization': `Bearer ${memoryToken}`} : {}) },
-          credentials: 'include',
-          body: JSON.stringify({ role: 'agent', content: errorMsg, isError: true })
-        });
+      if (currentChatId) {
+        await appendMessage(currentChatId, { role: 'agent', content: errorMsg, isError: true });
       }
     } finally {
       setIsStreaming(false);
@@ -669,19 +537,6 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
       setCompletedPhases([]);
       setStreamingText('');
       abortControllerRef.current = null;
-      
-      // Always refresh conversations to update sidebar order and timestamps
-      try {
-        const headers = {};
-        if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
-        const res = await fetch(`${API_URL}/api/chat/conversations/${questionId}`, { headers, credentials: 'include' });
-        if (res.ok) {
-          const data = await res.json();
-          setConversations(data);
-        }
-      } catch (err) {
-        console.error('Failed to refresh conversations:', err);
-      }
     }
   }, [input, currentTurn, maxTurns, isStreaming, conversationHistory, questionContext, onAgentResponse, activeChatId, isLoggedIn, questionId]);
 
@@ -693,11 +548,6 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
   };
 
   const allPhases = ['analyzing', 'planning', 'generating', 'creating_files'];
-
-  const activeConv = conversations.find(c => c._id === activeConversationId);
-
-  const sortedByCreate = [...conversations].sort((a, b) => a._id.localeCompare(b._id));
-
 
   return (
     <div className="prompt-chat-wrapper" id="prompt-chat">
@@ -771,7 +621,7 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
               <div className="bubble-content">
                 <span className="bubble-role">{msg.role === 'user' ? 'You' : 'AI Agent'}</span>
                 <div className="bubble-text markdown-body">
-                  <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  <MarkdownRenderer content={msg.content} />
                 </div>
                 
                 {msg.previewHtml && (
@@ -823,42 +673,17 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
             </div>
           ))}
 
-          {/* Streaming Phase Indicator */}
+          {/* Real-time Streaming AI Response */}
           {isStreaming && (
-            <div className="chat-bubble agent streaming-bubble">
-              <div className="bubble-avatar streaming-avatar">
-                <FiCpu size={16} className="spin-icon" />
-                <div className="avatar-pulse" />
-              </div>
-              <div className="bubble-content agent-streaming-content">
-                <span className="bubble-role">AI Agent Working</span>
-
-                {/* Phase Progress */}
-                <div className="phase-progress">
-                  {allPhases.map((phase) => {
-                    const isDone = completedPhases.includes(phase);
-                    const isActive = currentPhase === phase;
-                    if (!isDone && !isActive) return null;
-                    return <PhaseIndicator key={phase} phase={phase} isActive={isActive} />;
-                  })}
-                  {currentPhase === 'complete' && (
-                    <PhaseIndicator phase="complete" isActive={true} />
-                  )}
+            <div className="chat-bubble agent">
+              <div className="bubble-content" style={{ paddingLeft: 0 }}>
+                <div className="agent-thought-indicator">
+                  <FiLoader size={16} className="spin-icon orange-sunburst" />
+                  <span className="animated-dots">{PHASE_LABELS[currentPhase] || 'Thinking'}</span>
                 </div>
-
-                {/* Live Streaming Text */}
-                {currentPhase === 'generating' && streamingText && (
-                  <div className="streaming-output">
-                    <div className="streaming-output-header">
-                      <FiCode size={13} />
-                      <span>Generating output</span>
-                      <div className="streaming-progress-bar">
-                        <div className="streaming-progress-fill" />
-                      </div>
-                    </div>
-                    <div className="streaming-text-container">
-                      <StreamingText text={streamingText.slice(-500)} />
-                    </div>
+                {streamingText && (
+                  <div className="bubble-text markdown-body" style={{ color: 'var(--text-primary)', marginTop: '8px' }}>
+                    <MarkdownRenderer content={formatPartialJSONToMarkdown(streamingText) + ' ▍'} />
                   </div>
                 )}
               </div>
@@ -868,38 +693,32 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
         </div>
         
         {/* Improved Chat Input Area */}
-        <div className="chat-input-area" style={{ padding: '20px', borderTop: '1px solid #e2e8f0', background: '#f8fafc', width: '100%' }}>
-          <div style={{ position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'flex-end', background: 'white', border: '1px solid #cbd5e1', borderRadius: '12px', padding: '12px 16px', boxShadow: '0 2px 6px rgba(0,0,0,0.02)', transition: 'border-color 0.2s, box-shadow 0.2s', flex: 1 }}
-               onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--primary-soft)'; }}
-               onBlur={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.02)'; }}
-          >
+        {/* Claude-style Input Area */}
+        <div className="chat-input-area">
+          <div className="claude-input-container">
             <textarea
               ref={textareaRef}
               value={input}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder={currentTurn >= maxTurns ? 'Max prompt turns reached' : 'Describe what the agent should build or fix...'}
+              placeholder={currentTurn >= maxTurns ? 'Max prompt turns reached' : 'Ask the AI agent...'}
               disabled={currentTurn >= maxTurns || isStreaming}
-              className="chat-textarea auto-resize"
+              className="claude-textarea auto-resize"
               id="prompt-input"
               rows={1}
-              style={{ flex: 1, border: 'none', resize: 'none', padding: '0', fontSize: '15px', lineHeight: '1.5', color: '#0f172a', background: 'transparent', outline: 'none', minHeight: '24px', maxHeight: '150px' }}
             />
-            <div style={{ display: 'flex', marginLeft: '12px', flexShrink: 0 }}>
-              <button
-                onClick={handleSend}
-                disabled={!input.trim() || currentTurn >= maxTurns || isStreaming}
-                className="btn-primary send-btn"
-                id="send-prompt-btn"
-                style={{ borderRadius: '8px', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, fontSize: '14px', height: '36px', opacity: isStreaming ? 0.7 : 1 }}
-              >
-                {isStreaming ? (
-                  <><FiCpu className="spin-icon" size={16} /> <span className="send-text">Working...</span></>
-                ) : (
-                  <><FiSend size={16} /> <span className="send-text">Send</span></>
-                )}
-              </button>
-            </div>
+            <button
+              onClick={handleSend}
+              disabled={!input.trim() || currentTurn >= maxTurns}
+              className="claude-send-btn"
+              id="send-prompt-btn"
+            >
+              {isStreaming ? (
+                <div className="claude-stop-square" />
+              ) : (
+                <FiArrowUp size={18} strokeWidth={2.5} />
+              )}
+            </button>
           </div>
         </div>
       </div>
