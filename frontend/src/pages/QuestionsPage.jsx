@@ -1,9 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { FiSearch, FiArrowRight, FiCheckCircle, FiAlertTriangle, FiTarget, FiBox } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import FilterBar from '../components/FilterBar';
 import QuestionCard from '../components/QuestionCard';
-import questions from '../data/questions';
 import { useAuth } from '../context/AuthContext';
 import './QuestionsPage.css';
 
@@ -13,8 +12,33 @@ export default function QuestionsPage() {
   const [category, setCategory] = useState('All');
   const [activeTab, setActiveTab] = useState('All Problems');
   
-  const { completedQuestions } = useAuth();
+  const [questions, setQuestions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { completedQuestions, memoryToken } = useAuth();
 
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const headers = {};
+        if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
+        
+        const res = await fetch('http://localhost:5000/api/questions', { headers, credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to fetch questions');
+        
+        const data = await res.json();
+        setQuestions(data);
+      } catch (err) {
+        setError(err.message);
+        // Optional fallback to local data if needed, but for now we'll just show error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuestions();
+  }, [memoryToken]);
+  
   const handleFilter = (filters) => {
     setSearch(filters.search);
     setDifficulty(filters.difficulty);
@@ -29,8 +53,9 @@ export default function QuestionsPage() {
 
   // Find last unfinished question
   const lastUnfinished = useMemo(() => {
+    if (!questions || questions.length === 0) return null;
     return questions.find(q => !completedQuestions.includes(q.id)) || questions[0];
-  }, [completedQuestions]);
+  }, [questions, completedQuestions]);
 
   // Tab filtering
   const displayQuestions = useMemo(() => {
@@ -58,7 +83,23 @@ export default function QuestionsPage() {
     }
     
     return result;
-  }, [search, difficulty, category, activeTab, completedQuestions]);
+  }, [search, difficulty, category, activeTab, completedQuestions, questions]);
+    
+  if (loading) {
+    return (
+      <div className="questions-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+        <p style={{ color: 'var(--text-secondary)' }}>Loading problems...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="questions-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+        <p style={{ color: 'var(--error)' }}>Error: {error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="questions-page" id="questions-page">
@@ -116,19 +157,21 @@ export default function QuestionsPage() {
 
         <div className="header-right-panel">
           {/* Continue Practice Card */}
-          <div className="continue-card">
-            <div className="continue-header">
-              <span className="continue-badge">UP NEXT</span>
+          {lastUnfinished && (
+            <div className="continue-card">
+              <div className="continue-header">
+                <span className="continue-badge">UP NEXT</span>
+              </div>
+              <h3 className="continue-title">{lastUnfinished.title}</h3>
+              <div className="continue-meta">
+                <span className={`badge badge-${lastUnfinished.difficulty.toLowerCase()}`}>{lastUnfinished.difficulty}</span>
+                <span className="category-tag small">{lastUnfinished.category}</span>
+              </div>
+              <Link to={`/questions/${lastUnfinished.id}`} className="btn-resume">
+                Resume Practice <FiArrowRight />
+              </Link>
             </div>
-            <h3 className="continue-title">{lastUnfinished.title}</h3>
-            <div className="continue-meta">
-              <span className={`badge badge-${lastUnfinished.difficulty.toLowerCase()}`}>{lastUnfinished.difficulty}</span>
-              <span className="category-tag small">{lastUnfinished.category}</span>
-            </div>
-            <Link to={`/questions/${lastUnfinished.id}`} className="btn-resume">
-              Resume Practice <FiArrowRight />
-            </Link>
-          </div>
+          )}
         </div>
       </div>
 

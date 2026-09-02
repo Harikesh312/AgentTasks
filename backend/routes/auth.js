@@ -51,6 +51,7 @@ router.post('/register', async (req, res) => {
         _id: user.id,
         name: user.name,
         email: user.email,
+        role: user.role,
         completedQuestions: user.completedQuestions,
         token, // Optionally return it, but frontend shouldn't store it
       });
@@ -96,6 +97,7 @@ router.post('/login', async (req, res) => {
         _id: user.id,
         name: user.name,
         email: user.email,
+        role: user.role,
         completedQuestions: user.completedQuestions,
         token, // Sent for fallback, but frontend uses cookie
       });

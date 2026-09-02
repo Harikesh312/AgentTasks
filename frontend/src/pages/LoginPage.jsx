@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiMail, FiLock, FiHexagon, FiAlertCircle, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiMail, FiLock, FiAlertCircle, FiEye, FiEyeOff } from 'react-icons/fi';
 import './LoginPage.css';
 
 export default function LoginPage() {
@@ -33,7 +33,11 @@ export default function LoginPage() {
       }
 
       login(data);
-      navigate('/');
+      if (data.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -48,7 +52,7 @@ export default function LoginPage() {
         <div className="auth-left-panel">
           <div className="auth-left-content">
             <Link to="/" className="brand-header">
-              <FiHexagon className="brand-icon" /> AgentPrep
+              <img src="/logo02.png" alt="Logo" className="brand-icon" /> AgentPrep
             </Link>
             <h2>Welcome Back.</h2>
             <p>Log in to continue orchestrating AI agents, practicing your prompts, and tracking your progress.</p>

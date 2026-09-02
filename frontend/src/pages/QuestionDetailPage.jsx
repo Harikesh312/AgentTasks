@@ -7,7 +7,6 @@ import {
   FiAlertTriangle, FiBarChart2, FiCheckCircle, FiX,
   FiClipboard, FiSettings, FiImage, FiCheck, FiArrowLeft, FiArrowRight, FiClock, FiCode, FiZap, FiChevronDown, FiChevronUp, FiChevronLeft, FiChevronRight, FiCircle, FiMessageCircle
 } from 'react-icons/fi';
-import questions from '../data/questions';
 import mockAgentRuns from '../data/mockAgentRuns';
 import PromptChat from '../components/PromptChat';
 import FileExplorer from '../components/FileExplorer';
@@ -16,11 +15,16 @@ import EvaluationCard from '../components/EvaluationCard';
 import QuestionDiscussTab from '../components/QuestionDiscussTab';
 import ChatsTab from '../components/ChatsTab';
 import FullPreviewModal from '../components/FullPreviewModal';
+import { useAuth } from '../context/AuthContext';
 import './QuestionDetailPage.css';
 
 export default function QuestionDetailPage() {
   const { id } = useParams();
-  const question = questions.find((q) => q.id === Number(id));
+  const { memoryToken } = useAuth();
+  const [question, setQuestion] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
   const agentRun = mockAgentRuns[Number(id)];
 
   const [activeTab, setActiveTab] = useState('chat');
@@ -51,6 +55,26 @@ export default function QuestionDetailPage() {
   const [leftWidth, setLeftWidth] = useState(42); // percentage
   const containerRef = useRef(null);
   const isDragging = useRef(false);
+
+  useEffect(() => {
+    const fetchQuestion = async () => {
+      try {
+        const headers = {};
+        if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
+        
+        const res = await fetch(`http://localhost:5000/api/questions/${id}`, { headers, credentials: 'include' });
+        if (!res.ok) throw new Error('Question not found');
+        
+        const data = await res.json();
+        setQuestion(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchQuestion();
+  }, [id, memoryToken]);
 
   const handleMouseDown = (e) => {
     e.preventDefault();
@@ -92,8 +116,22 @@ export default function QuestionDetailPage() {
     return () => clearTimeout(timer);
   }, [currentPreview, currentTurn, question, currentFiles, agentRun]);
 
-  if (!question) {
-    return <div className="qd-not-found"><h2>Question not found</h2></div>;
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-off-white)' }}>
+        <p style={{ color: 'var(--text-secondary)' }}>Loading problem details...</p>
+      </div>
+    );
+  }
+
+  if (error || !question) {
+    return (
+      <div className="qd-not-found">
+        <h2>Problem not found</h2>
+        <p>{error}</p>
+        <Link to="/questions" className="btn-primary">Back to problems</Link>
+      </div>
+    );
   }
 
   // Build context string from question for the AI

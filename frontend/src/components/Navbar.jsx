@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiHexagon, FiUser, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
+import { FiUser, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
 import './Navbar.css';
 
 export default function Navbar() {
@@ -36,7 +36,7 @@ export default function Navbar() {
     <nav className="navbar" id="main-navbar">
       <div className="navbar-inner">
         <Link to="/" className="navbar-logo">
-          <FiHexagon className="logo-icon" />
+          <img src="/logo02.png" alt="Logo" className="logo-icon" />
           <span className="logo-text">AgentPrep</span>
         </Link>
 

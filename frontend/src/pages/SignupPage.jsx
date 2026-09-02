@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiUser, FiMail, FiLock, FiHexagon, FiAlertCircle, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiUser, FiMail, FiLock, FiAlertCircle, FiEye, FiEyeOff } from 'react-icons/fi';
 import './LoginPage.css'; // Reusing styles from LoginPage
 
 export default function SignupPage() {
@@ -55,7 +55,7 @@ export default function SignupPage() {
         <div className="auth-left-panel">
           <div className="auth-left-content">
             <Link to="/" className="brand-header">
-              <FiHexagon className="brand-icon" /> AgentPrep
+              <img src="/logo02.png" alt="Logo" className="brand-icon" /> AgentPrep
             </Link>
             <h2>Start Your Journey.</h2>
             <p>Join thousands of developers mastering AI agent orchestration and building the future of software.</p>

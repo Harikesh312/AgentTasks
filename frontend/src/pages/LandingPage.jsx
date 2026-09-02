@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   FiCpu, FiFileText, FiBarChart2, FiArrowRight, FiTarget,
-  FiUsers, FiImage, FiCode, FiMonitor, FiHexagon
+  FiUsers, FiImage, FiCode, FiMonitor
 } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import './LandingPage.css';
@@ -369,7 +369,7 @@ export default function LandingPage() {
         <div className="footer-inner">
           <div className="footer-brand">
             <div className="footer-brand-name">
-              <FiHexagon size={20} />
+              <img src="/logo02.png" alt="Logo" style={{ width: '20px', height: '20px' }} />
               AgentPrep
             </div>
             <p className="footer-brand-desc">

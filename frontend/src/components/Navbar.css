@@ -40,9 +40,9 @@
 }
 
 .logo-icon {
-  font-size: 1.6rem;
-  color: var(--primary);
-  display: inline-flex;
+  height: 36px;
+  width: auto;
+  object-fit: contain;
 }
 
 /* Navigation Links */

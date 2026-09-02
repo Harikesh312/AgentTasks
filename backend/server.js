@@ -6,7 +6,9 @@ import authRoutes from './routes/auth.js';
 import agentRoutes from './routes/agent.js';
 import discussRoutes from './routes/discuss.js';
 import chatRoutes from './routes/chat.js';
-
+import adminRoutes from './routes/admin.js';
+import questionsRoutes from './routes/questions.js';
+import { seedAdminAndQuestions } from './utils/seedAdmin.js';
 dotenv.config();
 
 const app = express();
@@ -35,11 +37,15 @@ app.use('/api/auth', authRoutes);
 app.use('/api/agent', agentRoutes);
 app.use('/api/discuss', discussRoutes);
 app.use('/api/chats', chatRoutes);
-
+app.use('/api/admin', adminRoutes);
+app.use('/api/questions', questionsRoutes);
 // Database Connection
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB Connected'))
+  .then(async () => {
+    console.log('MongoDB Connected');
+    await seedAdminAndQuestions();
+  })
   .catch((err) => console.log('MongoDB Connection Error: ', err));
 
 const PORT = process.env.PORT || 5000;

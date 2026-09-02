@@ -9,9 +9,12 @@ import ContestPage from './pages/ContestPage';
 import DiscussPage from './pages/DiscussPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
-import { Navigate } from 'react-router-dom';
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminQuestions from './pages/admin/AdminQuestions';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
-
 function ProtectedRoute({ children }) {
   const { isLoggedIn, isInitializing } = useAuth();
   
@@ -29,12 +32,36 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-export default function App() {
+function AdminRoute({ children }) {
+  const { isLoggedIn, isInitializing, user } = useAuth();
+  
+  if (isInitializing) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-off-white)' }}>
+        <div style={{ padding: '20px', color: 'var(--text-secondary)' }}>Loading...</div>
+      </div>
+    );
+  }
+
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user?.role !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+}
+
+function App() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Navbar />
-        <Routes>
+    <>
+      {!isAdminRoute && <Navbar />}
+      <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
@@ -63,7 +90,26 @@ export default function App() {
               <DiscussPage />
             </ProtectedRoute>
           } />
+          
+          <Route path="/admin" element={
+            <AdminRoute>
+              <AdminLayout />
+            </AdminRoute>
+          }>
+            <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="questions" element={<AdminQuestions />} />
+          </Route>
         </Routes>
+    </>
+  );
+}
+
+export default function AppWrapper() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <App />
       </BrowserRouter>
     </AuthProvider>
   );
