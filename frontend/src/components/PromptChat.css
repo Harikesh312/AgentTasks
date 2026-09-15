@@ -564,7 +564,9 @@
   border: 1px solid #d1d5db;
   border-radius: 16px;
   padding: 10px 12px;
-  width: 100%;
+  flex: 1;
+  width: auto;
+  min-width: 0;
   box-shadow: 0 2px 6px rgba(0,0,0,0.02);
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -667,11 +669,12 @@
 /* ─── Input Area ─── */
 .chat-input-area {
   display: flex;
-  justify-content: center;
+  width: 100%;
+  align-items: center;
+  gap: 16px;
   padding: 16px 20px;
   border-top: 1px solid var(--border-light);
   background: var(--bg-white);
-  width: 100%;
 }
 
 /* ─── Generation Result Card ─── */
@@ -834,4 +837,32 @@
 
 .chat-file-action {
   color: var(--text-muted);
+}
+
+.chat-submit-area {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.submit-eval-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.submit-eval-button.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.submit-eval-button:hover:not(.disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25);
 }

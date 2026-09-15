@@ -180,15 +180,23 @@ function TypewriterText({ text }) {
 
 /* ─── Quick Stats Ribbon ─── */
 function QuickStatsRibbon({ metrics }) {
+  const getBadgeTheme = (label) => {
+    if (label.includes('Visual')) return 'amber';
+    if (label.includes('Requirement')) return 'green';
+    if (label.includes('Functionality')) return 'green';
+    if (label.includes('Responsiveness')) return 'red';
+    if (label.includes('Code')) return 'orange';
+    if (label.includes('Prompt')) return 'green';
+    return 'blue';
+  };
+
   return (
     <div className="pe-quick-stats-ribbon">
       {metrics.map((m) => {
-        let pillClass = 'pe-pill-green';
-        if (m.value < 80) pillClass = 'pe-pill-amber';
-        if (m.value < 50) pillClass = 'pe-pill-red';
+        const pillClass = `pe-pill-${getBadgeTheme(m.label)}`;
         return (
           <div key={m.label} className={`pe-stat-pill ${pillClass}`}>
-            <m.icon size={13} />
+            <m.icon size={18} />
             <span className="pe-pill-label">{m.label.split(' ')[0]}</span>
             <span className="pe-pill-value">{m.value}%</span>
           </div>

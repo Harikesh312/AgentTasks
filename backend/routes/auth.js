@@ -152,10 +152,52 @@ router.post('/complete/:questionId', protect, async (req, res) => {
 
     if (!user.completedQuestions.includes(questionId)) {
       user.completedQuestions.push(questionId);
+      user.activityHistory.push({
+        date: new Date(),
+        type: 'question_completed',
+        questionId,
+      });
       await user.save();
     }
 
     res.json(user.completedQuestions);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   PUT /api/auth/profile
+// @desc    Update user profile
+// @access  Private
+router.put('/profile', protect, async (req, res) => {
+  try {
+    const { name, bio, username, gender, dateOfBirth, location, github, linkedin, portfolio } = req.body;
+    const user = await User.findById(req.user.id);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (name !== undefined) {
+      if (!name.trim()) {
+        return res.status(400).json({ message: 'Name cannot be empty' });
+      }
+      user.name = name.trim();
+    }
+    if (bio !== undefined) user.bio = bio.substring(0, 300);
+    if (username !== undefined) user.username = username.trim().substring(0, 30);
+    if (gender !== undefined) user.gender = gender;
+    if (dateOfBirth !== undefined) user.dateOfBirth = dateOfBirth ? new Date(dateOfBirth) : null;
+    if (location !== undefined) user.location = location.substring(0, 100);
+    if (github !== undefined) user.github = github.substring(0, 100);
+    if (linkedin !== undefined) user.linkedin = linkedin.substring(0, 100);
+    if (portfolio !== undefined) user.portfolio = portfolio.substring(0, 200);
+
+    await user.save();
+
+    const updatedUser = await User.findById(req.user.id).select('-password');
+    res.json(updatedUser);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

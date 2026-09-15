@@ -36,6 +36,7 @@ export default function QuestionDetailPage() {
   const [toast, setToast] = useState(null);
   const [tipsExpanded, setTipsExpanded] = useState(false);
   const [pendingChatId, setPendingChatId] = useState(null);
+  const [isSubmittingEval, setIsSubmittingEval] = useState(false);
 
   // Preview & Evaluation state (Part 4)
   const [previewEvaluation, setPreviewEvaluation] = useState(null);
@@ -116,6 +117,26 @@ export default function QuestionDetailPage() {
     return () => clearTimeout(timer);
   }, [currentPreview, currentTurn, question, currentFiles, agentRun]);
 
+  const handleAgentResponse = useCallback((prompt, responseData) => {
+    if (responseData.files) {
+      setCurrentFiles(responseData.files);
+    }
+    if (responseData.previewHtml) {
+      setCurrentPreview(responseData.previewHtml);
+    }
+    setCurrentTurn((prev) => prev + 1);
+    setLastGeneratedAt(new Date());
+  }, []);
+
+  const handleLoadConversation = useCallback((loadedTurn, files, previewHtml) => {
+    setCurrentTurn(loadedTurn);
+    setCurrentFiles(files || null);
+    setCurrentPreview(previewHtml || null);
+    setShowEval(false);
+    setEvaluation(null);
+    setPreviewEvaluation(null);
+  }, []);
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-off-white)' }}>
@@ -145,26 +166,6 @@ export default function QuestionDetailPage() {
     questionContext += parts.join(' | ');
   }
 
-  const handleAgentResponse = useCallback((prompt, responseData) => {
-    if (responseData.files) {
-      setCurrentFiles(responseData.files);
-    }
-    if (responseData.previewHtml) {
-      setCurrentPreview(responseData.previewHtml);
-    }
-    setCurrentTurn((prev) => prev + 1);
-    setLastGeneratedAt(new Date());
-  }, []);
-
-  const handleLoadConversation = useCallback((loadedTurn, files, previewHtml) => {
-    setCurrentTurn(loadedTurn);
-    setCurrentFiles(files || null);
-    setCurrentPreview(previewHtml || null);
-    setShowEval(false);
-    setEvaluation(null);
-    setPreviewEvaluation(null);
-  }, []);
-
   const handleDownload = async () => {
     if (!currentFiles) return;
     const zip = new JSZip();
@@ -178,10 +179,14 @@ export default function QuestionDetailPage() {
   };
 
   const handleSubmit = () => {
-    if (!currentFiles) return;
-    setShowEval(true);
-    const evalData = agentRun.evaluateOutput(question, currentFiles, currentTurn);
-    setEvaluation(evalData);
+    if (!currentFiles || isSubmittingEval) return;
+    setIsSubmittingEval(true);
+    setTimeout(() => {
+      setShowEval(true);
+      const evalData = agentRun.evaluateOutput(question, currentFiles, currentTurn);
+      setEvaluation(evalData);
+      setIsSubmittingEval(false);
+    }, 1500);
   };
 
   const handleTryAgain = () => {
@@ -375,6 +380,9 @@ export default function QuestionDetailPage() {
                 pendingChatId={pendingChatId}
                 onPendingChatConsumed={() => setPendingChatId(null)}
                 onOpenFullPreview={handleOpenFullPreview}
+                onSubmitSolution={handleSubmit}
+                isSubmitEnabled={!!currentFiles}
+                isSubmittingEval={isSubmittingEval}
               />
             </div>
             {activeTab === 'files' && (

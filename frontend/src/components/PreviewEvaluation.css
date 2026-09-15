@@ -1414,8 +1414,8 @@
 .pe-quick-stats-ribbon {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 4px 0 12px;
+  gap: 12px;
+  padding: 8px 0 16px;
   margin-bottom: 16px;
   animation: ribbonSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
@@ -1428,46 +1428,54 @@
 .pe-stat-pill {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
+  gap: 8px;
+  padding: 8px 16px;
   border-radius: 20px;
-  font-size: 0.7rem;
+  font-size: 14px;
   font-weight: 700;
-  border: 1px solid;
+  border: 1.5px solid;
   transition: all 0.2s ease;
   cursor: default;
+  min-height: 40px;
 }
 
 .pe-stat-pill:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .pe-pill-label {
   font-weight: 600;
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 .pe-pill-value {
   font-weight: 800;
+  font-size: 15px;
 }
 
 .pe-pill-green {
   background: #f0fdf4;
   color: #15803d;
-  border-color: #bbf7d0;
+  border-color: #86efac;
 }
 
 .pe-pill-amber {
   background: #fffbeb;
   color: #b45309;
-  border-color: #fde68a;
+  border-color: #fcd34d;
 }
 
 .pe-pill-red {
   background: #fef2f2;
   color: #b91c1c;
-  border-color: #fecaca;
+  border-color: #fca5a5;
+}
+
+.pe-pill-orange {
+  background: #fff7ed;
+  color: #c2410c;
+  border-color: #fdba74;
 }
 
 /* ═══════════════════════════════════════

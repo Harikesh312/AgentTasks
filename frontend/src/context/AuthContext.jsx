@@ -85,7 +85,16 @@ export function AuthProvider({ children }) {
         });
         if (res.ok) {
           const completedQuestions = await res.json();
-          setUser({ ...user, completedQuestions });
+          // Re-fetch full user to get updated activityHistory
+          const userRes = await fetch('http://localhost:5000/api/auth/me', {
+            credentials: 'include'
+          });
+          if (userRes.ok) {
+            const updatedUser = await userRes.json();
+            setUser(updatedUser);
+          } else {
+            setUser({ ...user, completedQuestions });
+          }
         }
       } catch (err) {
         console.error('Failed to mark question as completed', err);
@@ -100,10 +109,30 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const updateProfile = async (updates) => {
+    const headers = { 'Content-Type': 'application/json' };
+    if (memoryToken) {
+      headers['Authorization'] = `Bearer ${memoryToken}`;
+    }
+    const res = await fetch('http://localhost:5000/api/auth/profile', {
+      method: 'PUT',
+      headers,
+      credentials: 'include',
+      body: JSON.stringify(updates),
+    });
+    if (res.ok) {
+      const updatedUser = await res.json();
+      setUser(updatedUser);
+      return updatedUser;
+    }
+    const errData = await res.json();
+    throw new Error(errData.message || 'Failed to update profile');
+  };
+
   const completedQuestions = isLoggedIn && user ? (user.completedQuestions || []) : localCompleted;
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, isInitializing, user, memoryToken, login, logout, completedQuestions, completeQuestion }}>
+    <AuthContext.Provider value={{ isLoggedIn, isInitializing, user, memoryToken, login, logout, completedQuestions, completeQuestion, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

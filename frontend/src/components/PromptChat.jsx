@@ -154,7 +154,7 @@ function FileCard({ fileName, code, onOpen }) {
   );
 }
 
-export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, questionContext, onOpenPreview, onOpenFile, questionId, onChatLoaded, onGoToChats, pendingChatId, onPendingChatConsumed, onOpenFullPreview }) {
+export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, questionContext, onOpenPreview, onOpenFile, questionId, onChatLoaded, onGoToChats, pendingChatId, onPendingChatConsumed, onOpenFullPreview, onSubmitSolution, isSubmitEnabled, isSubmittingEval }) {
   const { user, memoryToken, isLoggedIn } = useAuth();
   
   // Chat content state
@@ -720,6 +720,26 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
               )}
             </button>
           </div>
+          
+          {onSubmitSolution && (
+            <div className="chat-submit-area">
+              <button 
+                className={`btn-primary pe-btn-premium submit-eval-button ${!isSubmitEnabled || isSubmittingEval ? 'disabled' : ''}`}
+                onClick={onSubmitSolution}
+                disabled={!isSubmitEnabled || isSubmittingEval}
+              >
+                {isSubmittingEval ? (
+                  <>
+                    <FiLoader size={18} className="spin-icon" /> Submitting...
+                  </>
+                ) : (
+                  <>
+                    <FiCheck size={18} /> Submit
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
