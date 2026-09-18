@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { FiSearch, FiArrowRight, FiCheckCircle, FiAlertTriangle, FiTarget, FiBox } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
+import { API_URL } from '../config';
 import FilterBar from '../components/FilterBar';
 import QuestionCard from '../components/QuestionCard';
 import { useAuth } from '../context/AuthContext';
@@ -23,7 +24,7 @@ export default function QuestionsPage() {
         const headers = {};
         if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
         
-        const res = await fetch('http://localhost:5000/api/questions', { headers, credentials: 'include' });
+        const res = await fetch(`${API_URL}/api/questions`, { headers, credentials: 'include' });
         if (!res.ok) throw new Error('Failed to fetch questions');
         
         const data = await res.json();

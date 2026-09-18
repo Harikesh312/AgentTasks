@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { API_URL } from '../config';
 
 const AuthContext = createContext(null);
 
@@ -28,7 +29,7 @@ export function AuthProvider({ children }) {
       // If we are mounting, memoryToken is null. We rely purely on the cookie.
       // If Remember Me was OFF, the cookie doesn't exist -> fails -> logs out (TEST 1 satisfied).
       // If Remember Me was ON, the cookie exists -> succeeds -> logs in (TEST 2, 3 satisfied).
-      const res = await fetch('http://localhost:5000/api/auth/me', {
+      const res = await fetch(`${API_URL}/api/auth/me`, {
         credentials: 'include'
       });
       if (res.ok) {
@@ -57,7 +58,7 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      await fetch('http://localhost:5000/api/auth/logout', {
+      await fetch(`${API_URL}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include'
       });
@@ -78,7 +79,7 @@ export function AuthProvider({ children }) {
           headers['Authorization'] = `Bearer ${memoryToken}`;
         }
         
-        const res = await fetch(`http://localhost:5000/api/auth/complete/${questionId}`, {
+        const res = await fetch(`${API_URL}/api/auth/complete/${questionId}`, {
           method: 'POST',
           credentials: 'include',
           headers: headers
@@ -86,7 +87,7 @@ export function AuthProvider({ children }) {
         if (res.ok) {
           const completedQuestions = await res.json();
           // Re-fetch full user to get updated activityHistory
-          const userRes = await fetch('http://localhost:5000/api/auth/me', {
+          const userRes = await fetch(`${API_URL}/api/auth/me`, {
             credentials: 'include'
           });
           if (userRes.ok) {
@@ -114,7 +115,7 @@ export function AuthProvider({ children }) {
     if (memoryToken) {
       headers['Authorization'] = `Bearer ${memoryToken}`;
     }
-    const res = await fetch('http://localhost:5000/api/auth/profile', {
+    const res = await fetch(`${API_URL}/api/auth/profile`, {
       method: 'PUT',
       headers,
       credentials: 'include',

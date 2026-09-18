@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { API_URL } from '../../config';
 import { FiUsers, FiFileText, FiCheckCircle } from 'react-icons/fi';
 import './AdminDashboard.css';
 
@@ -20,7 +21,7 @@ export default function AdminDashboard() {
         headers['Authorization'] = `Bearer ${memoryToken}`;
       }
 
-      const res = await fetch('http://localhost:5000/api/admin/stats', {
+      const res = await fetch(`${API_URL}/api/admin/stats`, {
         headers,
         credentials: 'include'
       });

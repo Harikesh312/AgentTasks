@@ -4,7 +4,7 @@ import { FiPlus, FiMessageCircle, FiTrash2, FiClock, FiChevronLeft, FiLoader } f
 import { useAuth } from '../context/AuthContext';
 import './ChatSidebar.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+import { API_URL } from '../config';
 
 function formatRelativeTime(dateStr) {
   const now = new Date();

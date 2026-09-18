@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { API_URL } from '../../config';
 import { FiEdit2, FiTrash2, FiPlus, FiX } from 'react-icons/fi';
 import './AdminUsers.css';
 
@@ -27,7 +28,7 @@ export default function AdminUsers() {
       const headers = {};
       if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
       
-      const res = await fetch('http://localhost:5000/api/admin/users', { headers, credentials: 'include' });
+      const res = await fetch(`${API_URL}/api/admin/users`, { headers, credentials: 'include' });
       if (!res.ok) throw new Error('Failed to fetch users');
       
       const data = await res.json();
@@ -50,7 +51,7 @@ export default function AdminUsers() {
         const headers = {};
         if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
         
-        const res = await fetch(`http://localhost:5000/api/admin/users/${id}`, {
+        const res = await fetch(`${API_URL}/api/admin/users/${id}`, {
           method: 'DELETE',
           headers,
           credentials: 'include'
@@ -86,8 +87,8 @@ export default function AdminUsers() {
       if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
       
       const url = editingUser 
-        ? `http://localhost:5000/api/admin/users/${editingUser._id}`
-        : 'http://localhost:5000/api/admin/users';
+        ? `${API_URL}/api/admin/users/${editingUser._id}`
+        : `${API_URL}/api/admin/users`;
         
       const method = editingUser ? 'PUT' : 'POST';
       

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { API_URL } from '../../config';
 import { FiSave } from 'react-icons/fi';
 import './AdminQuestions.css';
 
@@ -46,7 +47,7 @@ export default function AdminQuestions() {
         constraints: formData.constraints.split('\n').filter(c => c.trim() !== '')
       };
 
-      const res = await fetch('http://localhost:5000/api/admin/questions', {
+      const res = await fetch(`${API_URL}/api/admin/questions`, {
         method: 'POST',
         headers,
         credentials: 'include',

@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { API_URL } from '../config';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import {
@@ -63,7 +64,7 @@ export default function QuestionDetailPage() {
         const headers = {};
         if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
         
-        const res = await fetch(`http://localhost:5000/api/questions/${id}`, { headers, credentials: 'include' });
+        const res = await fetch(`${API_URL}/api/questions/${id}`, { headers, credentials: 'include' });
         if (!res.ok) throw new Error('Question not found');
         
         const data = await res.json();

@@ -1,4 +1,6 @@
-const BASE_URL = 'http://localhost:5000/api/discuss';
+import { API_URL } from '../config';
+
+const BASE_URL = `${API_URL}/api/discuss`;
 
 // Helper for making API calls with tokens
 const fetchWithAuth = async (url, options = {}, token = null) => {
