@@ -252,7 +252,7 @@ export default function DiscussPage() {
           <div className="discuss-hero-text">
             <h1 className="discuss-hero-title">Discuss</h1>
             <p className="discuss-hero-sub">
-              Learn from real prompts, interview experiences, agent failures, and strategies shared by the AgentPrep community.
+              Learn from real prompts, interview experiences, agent failures, and strategies shared by the AgentTasks community.
             </p>
             <div className="discuss-stats">
               <div className="d-stat stat-orange">

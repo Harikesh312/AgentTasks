@@ -143,6 +143,62 @@ export default function LandingPage() {
 
   return (
     <div className="landing-page" id="landing-page">
+      {/* ═══ GLOBAL WATERMARK / SHADING ═══ */}
+      <div className="global-page-watermark">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 1024" className="watermark-svg" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="wm-grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.12" />
+              <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.02" />
+            </linearGradient>
+            <radialGradient id="wm-glow1" cx="0%" cy="0%" r="50%">
+              <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.08" />
+              <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
+            </radialGradient>
+            <radialGradient id="wm-glow2" cx="100%" cy="80%" r="60%">
+              <stop offset="0%" stopColor="#ff9a6c" stopOpacity="0.06" />
+              <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+
+          {/* Glows */}
+          <circle cx="0" cy="0" r="600" fill="url(#wm-glow1)" />
+          <circle cx="1440" cy="800" r="700" fill="url(#wm-glow2)" />
+          <circle cx="200" cy="1000" r="400" fill="url(#wm-glow1)" opacity="0.6" />
+
+          {/* Branching Y-shape / Nodes */}
+          <g stroke="url(#wm-grad1)" strokeWidth="1.5" fill="none">
+            {/* Top Right Branching */}
+            <path d="M 1440 100 C 1200 150, 1000 50, 900 250 C 850 350, 1000 450, 1100 550 C 1150 600, 1300 650, 1440 600" />
+            <path d="M 900 250 C 750 200, 600 300, 500 200" />
+            <path d="M 1100 550 C 950 650, 1000 800, 850 900" />
+            
+            {/* Bottom Left Branching */}
+            <path d="M 0 400 C 200 450, 300 600, 250 750 C 200 900, 50 950, 0 1000" />
+            <path d="M 250 750 C 400 700, 500 850, 600 800" />
+            <path d="M 300 600 C 450 550, 400 350, 500 200" />
+          </g>
+
+          {/* Nodes/Dots */}
+          <g fill="var(--primary)" opacity="0.25">
+            <circle cx="900" cy="250" r="4.5" />
+            <circle cx="1100" cy="550" r="5.5" />
+            <circle cx="500" cy="200" r="3" />
+            <circle cx="850" cy="900" r="4" />
+            <circle cx="250" cy="750" r="5" />
+            <circle cx="300" cy="600" r="4" />
+            <circle cx="600" cy="800" r="3.5" />
+          </g>
+          
+          {/* Subtle concentric arcs for tech feel */}
+          <g stroke="var(--primary)" strokeWidth="1" fill="none" opacity="0.06">
+            <circle cx="1440" cy="0" r="350" />
+            <circle cx="1440" cy="0" r="500" />
+            <circle cx="0" cy="1024" r="300" />
+            <circle cx="0" cy="1024" r="450" />
+          </g>
+        </svg>
+      </div>
 
       {/* ═══ 1. HERO ═══ */}
       <section className="hero">
@@ -218,6 +274,7 @@ export default function LandingPage() {
         </div>
       </section>
 
+
       {/* ═══ 3. HOW IT WORKS — Vertical Timeline ═══ */}
       <section
         className="how-it-works-section"
@@ -228,7 +285,7 @@ export default function LandingPage() {
           <div className="section-tag">Workflow</div>
           <h2 className="section-title">How It Works</h2>
           <p className="section-subtitle">
-            From your first prompt to a detailed evaluation — see how AgentPrep
+            From your first prompt to a detailed evaluation — see how AgentTasks
             turns ideas into results.
           </p>
         </div>
@@ -370,7 +427,7 @@ export default function LandingPage() {
           <div className="footer-brand">
             <div className="footer-brand-name">
               <img src="/logo02.png" alt="Logo" style={{ width: '20px', height: '20px' }} />
-              AgentPrep
+              AgentTasks
             </div>
             <p className="footer-brand-desc">
               Practice AI agent orchestration. Write prompts, guide agents, and
@@ -404,7 +461,7 @@ export default function LandingPage() {
         </div>
 
         <div className="footer-bottom">
-          <span className="footer-copy">© {new Date().getFullYear()} AgentPrep. All rights reserved.</span>
+          <span className="footer-copy">© {new Date().getFullYear()} AgentTasks. All rights reserved.</span>
           <div className="footer-bottom-links">
             <a href="#" className="footer-bottom-link">Privacy</a>
             <a href="#" className="footer-bottom-link">Terms</a>

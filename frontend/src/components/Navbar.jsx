@@ -37,7 +37,7 @@ export default function Navbar() {
       <div className="navbar-inner">
         <Link to="/" className="navbar-logo">
           <img src="/logo02.png" alt="Logo" className="logo-icon" />
-          <span className="logo-text">AgentPrep</span>
+          <span className="logo-text">AgentTasks</span>
         </Link>
 
         <button className="mobile-toggle" onClick={() => setMobileOpen(!mobileOpen)} aria-label="Toggle menu">

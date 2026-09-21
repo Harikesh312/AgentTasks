@@ -56,7 +56,7 @@ export default function SignupPage() {
         <div className="auth-left-panel">
           <div className="auth-left-content">
             <Link to="/" className="brand-header">
-              <img src="/logo02.png" alt="Logo" className="brand-icon" /> AgentPrep
+              <img src="/logo02.png" alt="Logo" className="brand-icon" /> AgentTasks
             </Link>
             <h2>Start Your Journey.</h2>
             <p>Join thousands of developers mastering AI agent orchestration and building the future of software.</p>

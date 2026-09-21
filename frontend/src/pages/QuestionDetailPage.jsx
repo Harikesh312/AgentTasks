@@ -174,7 +174,7 @@ export default function QuestionDetailPage() {
       zip.file(name, content);
     });
     const blob = await zip.generateAsync({ type: 'blob' });
-    saveAs(blob, `agentprep-${question.id}-output.zip`);
+    saveAs(blob, `agenttasks-${question.id}-output.zip`);
     setToast('Files downloaded successfully!');
     setTimeout(() => setToast(null), 3000);
   };

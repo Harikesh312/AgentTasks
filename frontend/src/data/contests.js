@@ -7,7 +7,7 @@ const MINUTE = 60000;
 const contests = [
   {
     id: 1,
-    name: 'AgentPrep Weekly Contest #01',
+    name: 'AgentTasks Weekly Contest #01',
     type: 'Weekly',
     date: new Date(now + 2 * DAY + 14 * HOUR).toISOString(),
     startTime: '10:00 AM UTC',
@@ -31,7 +31,7 @@ const contests = [
   },
   {
     id: 2,
-    name: 'AgentPrep Weekly Contest #02',
+    name: 'AgentTasks Weekly Contest #02',
     type: 'Weekly',
     date: new Date(now + 9 * DAY + 10 * HOUR).toISOString(),
     startTime: '10:00 AM UTC',
@@ -54,7 +54,7 @@ const contests = [
   },
   {
     id: 3,
-    name: 'AgentPrep Biweekly Challenge',
+    name: 'AgentTasks Biweekly Challenge',
     type: 'Biweekly',
     date: new Date(now + 5 * DAY + 16 * HOUR).toISOString(),
     startTime: '2:00 PM UTC',
@@ -77,7 +77,7 @@ const contests = [
   },
   {
     id: 4,
-    name: 'AgentPrep Monthly Championship',
+    name: 'AgentTasks Monthly Championship',
     type: 'Monthly',
     date: new Date(now + 18 * DAY + 12 * HOUR).toISOString(),
     startTime: '12:00 PM UTC',
@@ -111,7 +111,7 @@ const contests = [
     difficulty: 'Easy',
     status: 'upcoming',
     description:
-      'A beginner-friendly contest with easy problems. Perfect for your first AgentPrep competition!',
+      'A beginner-friendly contest with easy problems. Perfect for your first AgentTasks competition!',
     rules: [
       'Designed for new participants',
       'Hints available for each problem',
@@ -146,7 +146,7 @@ const contests = [
 
 const liveContest = {
   id: 100,
-  name: 'AgentPrep Flash Challenge #07',
+  name: 'AgentTasks Flash Challenge #07',
   type: 'Weekly',
   date: new Date(now - 45 * MINUTE).toISOString(),
   startTime: 'Started 45m ago',
@@ -165,7 +165,7 @@ const liveContest = {
 const pastContests = [
   {
     id: 201,
-    name: 'AgentPrep Weekly Contest #12',
+    name: 'AgentTasks Weekly Contest #12',
     type: 'Weekly',
     date: new Date(now - 7 * DAY).toISOString(),
     duration: '90 Minutes',
@@ -179,7 +179,7 @@ const pastContests = [
   },
   {
     id: 202,
-    name: 'AgentPrep Biweekly Challenge #06',
+    name: 'AgentTasks Biweekly Challenge #06',
     type: 'Biweekly',
     date: new Date(now - 14 * DAY).toISOString(),
     duration: '120 Minutes',
@@ -193,7 +193,7 @@ const pastContests = [
   },
   {
     id: 203,
-    name: 'AgentPrep Monthly Championship #03',
+    name: 'AgentTasks Monthly Championship #03',
     type: 'Monthly',
     date: new Date(now - 30 * DAY).toISOString(),
     duration: '180 Minutes',

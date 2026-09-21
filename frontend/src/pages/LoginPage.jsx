@@ -53,7 +53,7 @@ export default function LoginPage() {
         <div className="auth-left-panel">
           <div className="auth-left-content">
             <Link to="/" className="brand-header">
-              <img src="/logo02.png" alt="Logo" className="brand-icon" /> AgentPrep
+              <img src="/logo02.png" alt="Logo" className="brand-icon" /> AgentTasks
             </Link>
             <h2>Welcome Back.</h2>
             <p>Log in to continue orchestrating AI agents, practicing your prompts, and tracking your progress.</p>

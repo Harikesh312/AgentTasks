@@ -1,9 +1,29 @@
 /* ═══════════════════════════════════════════════
-   AgentPrep Landing Page — Premium Redesign v2
+   AgentTasks Landing Page — Premium Redesign v2
    ═══════════════════════════════════════════════ */
 
 .landing-page {
+  position: relative;
   overflow-x: hidden;
+  background-color: transparent;
+}
+
+/* ─── Global Watermark ─── */
+.global-page-watermark {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0; /* Behind content but above background */
+}
+
+.watermark-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 /* ─── Animate on Scroll ─── */
@@ -28,14 +48,11 @@
   padding: 96px 24px 80px;
   text-align: center;
   overflow: hidden;
-  background: linear-gradient(180deg, var(--bg-white) 0%, var(--primary-light) 100%);
+  background: transparent;
 }
 
 .hero-bg-shapes {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
+  display: none; /* Removed as we now have global watermark shapes */
 }
 
 .shape {
@@ -101,6 +118,52 @@
   gap: 14px;
   justify-content: center;
   flex-wrap: wrap;
+}
+
+/* ═══════════════════════════════════════════════
+   2.5 PRODUCT PREVIEW SECTION
+   ═══════════════════════════════════════════════ */
+
+.product-preview-section {
+  padding: 40px 24px;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  margin-top: -60px; /* Overlap with hero slightly */
+}
+
+.product-preview-container {
+  position: relative;
+  max-width: 1060px;
+  width: 100%;
+  border-radius: var(--radius-xl);
+  background: var(--bg-white);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.02);
+  border: 1px solid rgba(255, 107, 53, 0.15);
+  padding: 8px;
+  overflow: hidden;
+}
+
+.product-preview-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 120%;
+  height: 120%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(ellipse at center, rgba(255, 107, 53, 0.08) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.product-preview-image {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-lg);
+  display: block;
 }
 
 /* ═══════════════════════════════════════════════
