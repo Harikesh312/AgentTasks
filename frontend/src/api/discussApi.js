@@ -26,14 +26,14 @@ const fetchWithAuth = async (url, options = {}, token = null) => {
   return data;
 };
 
-export const getDiscussions = (problemId, params = {}) => {
+export const getDiscussions = (problemId, params = {}, token = null) => {
   const url = new URL(`${BASE_URL}/problem/${problemId}`);
   Object.keys(params).forEach(key => {
     if (params[key]) {
       url.searchParams.append(key, params[key]);
     }
   });
-  return fetchWithAuth(url.toString());
+  return fetchWithAuth(url.toString(), {}, token);
 };
 
 export const createDiscussion = (problemId, data, token) => {
@@ -43,8 +43,8 @@ export const createDiscussion = (problemId, data, token) => {
   }, token);
 };
 
-export const getDiscussionDetails = (id) => {
-  return fetchWithAuth(`${BASE_URL}/${id}`);
+export const getDiscussionDetails = (id, token = null) => {
+  return fetchWithAuth(`${BASE_URL}/${id}`, {}, token);
 };
 
 export const editDiscussion = (id, data, token) => {

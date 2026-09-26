@@ -1,4 +1,5 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -25,12 +26,23 @@ app.use((req, res, next) => {
   req.cookies = {};
   if (req.headers.cookie) {
     req.headers.cookie.split(';').forEach(c => {
-      const parts = c.split('=');
-      req.cookies[parts[0].trim()] = (parts[1] || '').trim();
+      const [key, ...rest] = c.split('=');
+      req.cookies[key.trim()] = rest.join('=').trim();
     });
   }
   next();
 });
+
+// Rate limiting for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  message: { message: 'Too many attempts, please try again after 15 minutes' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);

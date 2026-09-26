@@ -10,7 +10,7 @@ const router = express.Router();
 // --------------------------------------------------------
 
 // Get discussions for a specific problem (with filtering, sorting, pagination)
-router.get('/problem/:problemId', async (req, res) => {
+router.get('/problem/:problemId', protect, async (req, res) => {
   try {
     const { problemId } = req.params;
     const { type, sort, search, page = 1, limit = 20 } = req.query;
@@ -125,7 +125,7 @@ router.post('/problem/:problemId', protect, async (req, res) => {
 });
 
 // Get a single discussion + replies
-router.get('/:id', async (req, res) => {
+router.get('/:id', protect, async (req, res) => {
   try {
     const discussion = await Discussion.findById(req.params.id)
       .populate('author', 'name email');

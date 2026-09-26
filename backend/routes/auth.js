@@ -24,6 +24,10 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Please provide all fields' });
     }
 
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
@@ -44,7 +48,7 @@ router.post('/register', async (req, res) => {
       res.cookie('token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
+        sameSite: 'lax'
       });
       
       res.status(201).json({
@@ -83,15 +87,15 @@ router.post('/login', async (req, res) => {
       const cookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
+        sameSite: 'lax'
       };
       
       if (rememberMe) {
         cookieOptions.maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
-        res.cookie('token', token, cookieOptions);
-      } else {
-        res.clearCookie('token', cookieOptions);
       }
+      // Always set cookie — session cookie (no maxAge) when Remember Me is off,
+      // persistent cookie when Remember Me is on
+      res.cookie('token', token, cookieOptions);
 
       res.json({
         _id: user.id,
@@ -133,7 +137,7 @@ router.post('/logout', (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict'
+    sameSite: 'lax'
   });
   res.json({ message: 'Logged out successfully' });
 });

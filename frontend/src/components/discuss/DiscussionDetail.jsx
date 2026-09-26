@@ -19,7 +19,7 @@ export default function DiscussionDetail({ discussionId, onBack, isLoggedIn, cur
     setIsLoading(true);
     setError(null);
     try {
-      const data = await getDiscussionDetails(discussionId);
+      const data = await getDiscussionDetails(discussionId, memoryToken);
       setDiscussion(data.discussion);
       setReplies(data.replies);
     } catch (err) {

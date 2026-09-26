@@ -29,8 +29,13 @@ export function AuthProvider({ children }) {
       // If we are mounting, memoryToken is null. We rely purely on the cookie.
       // If Remember Me was OFF, the cookie doesn't exist -> fails -> logs out (TEST 1 satisfied).
       // If Remember Me was ON, the cookie exists -> succeeds -> logs in (TEST 2, 3 satisfied).
+      const headers = {};
+      if (memoryToken) {
+        headers['Authorization'] = `Bearer ${memoryToken}`;
+      }
       const res = await fetch(`${API_URL}/api/auth/me`, {
-        credentials: 'include'
+        credentials: 'include',
+        headers,
       });
       if (res.ok) {
         const data = await res.json();
@@ -87,8 +92,13 @@ export function AuthProvider({ children }) {
         if (res.ok) {
           const completedQuestions = await res.json();
           // Re-fetch full user to get updated activityHistory
+          const userResHeaders = {};
+          if (memoryToken) {
+            userResHeaders['Authorization'] = `Bearer ${memoryToken}`;
+          }
           const userRes = await fetch(`${API_URL}/api/auth/me`, {
-            credentials: 'include'
+            credentials: 'include',
+            headers: userResHeaders,
           });
           if (userRes.ok) {
             const updatedUser = await userRes.json();

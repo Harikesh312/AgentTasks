@@ -6,7 +6,7 @@ import AskQuestionModal from './AskQuestionModal';
 import { FiMessageSquare } from 'react-icons/fi';
 import './DiscussionList.css';
 
-export default function DiscussionList({ problemId, onSelectDiscussion, onCreateDiscussion, isLoggedIn }) {
+export default function DiscussionList({ problemId, onSelectDiscussion, onCreateDiscussion, isLoggedIn, memoryToken }) {
   const [discussions, setDiscussions] = useState([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,7 +47,7 @@ export default function DiscussionList({ problemId, onSelectDiscussion, onCreate
       if (sortBy) params.sort = sortBy;
       if (searchQuery) params.search = searchQuery;
 
-      const data = await getDiscussions(problemId, params);
+      const data = await getDiscussions(problemId, params, memoryToken);
       setDiscussions(data.discussions || []);
       setTotal(data.total || 0);
     } catch (err) {
