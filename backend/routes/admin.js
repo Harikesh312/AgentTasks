@@ -18,11 +18,11 @@ router.get('/stats', async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
     const totalQuestions = await Question.countDocuments();
-    
+
     // Calculate total completions across all users
     const users = await User.find({}, 'completedQuestions');
     const totalCompletions = users.reduce((acc, user) => acc + (user.completedQuestions ? user.completedQuestions.length : 0), 0);
-    
+
     res.json({
       totalUsers,
       totalQuestions,
@@ -53,7 +53,7 @@ router.get('/users', async (req, res) => {
 router.post('/users', async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
-    
+
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Please provide name, email, and password' });
     }
@@ -91,9 +91,9 @@ router.post('/users', async (req, res) => {
 router.put('/users/:id', async (req, res) => {
   try {
     const { name, email, role } = req.body;
-    
+
     const user = await User.findById(req.params.id);
-    
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -104,8 +104,8 @@ router.put('/users/:id', async (req, res) => {
 
     // Optional: if password update is needed from admin
     if (req.body.password) {
-       const salt = await bcrypt.genSalt(10);
-       user.password = await bcrypt.hash(req.body.password, salt);
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(req.body.password, salt);
     }
 
     const updatedUser = await user.save();
@@ -128,14 +128,14 @@ router.put('/users/:id', async (req, res) => {
 router.delete('/users/:id', async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-    
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    
+
     // Prevent deleting oneself
     if (user._id.toString() === req.user.id) {
-       return res.status(400).json({ message: 'You cannot delete your own admin account' });
+      return res.status(400).json({ message: 'You cannot delete your own admin account' });
     }
 
     await User.findByIdAndDelete(req.params.id);
@@ -164,7 +164,7 @@ router.post('/questions', async (req, res) => {
       requiredContent,
       maxPromptTurns
     } = req.body;
-    
+
     // Auto-increment ID based on highest existing ID
     const lastQuestion = await Question.findOne().sort({ id: -1 });
     const newId = lastQuestion ? lastQuestion.id + 1 : 1;

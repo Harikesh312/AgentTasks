@@ -19,7 +19,7 @@ export default function AdminLayout() {
           <h2>Admin Panel</h2>
           <span className="admin-badge">Admin</span>
         </div>
-        
+
         <nav className="admin-nav">
           <NavLink to="/admin" end className={({ isActive }) => `admin-nav-link ${isActive ? 'active' : ''}`}>
             <FiHome size={20} />

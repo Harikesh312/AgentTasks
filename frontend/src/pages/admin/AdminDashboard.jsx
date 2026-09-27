@@ -25,9 +25,9 @@ export default function AdminDashboard() {
         headers,
         credentials: 'include'
       });
-      
+
       if (!res.ok) throw new Error('Failed to fetch stats');
-      
+
       const data = await res.json();
       setStats(data);
     } catch (err) {

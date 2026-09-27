@@ -2,7 +2,8 @@
   display: flex;
   min-height: 100vh;
   background-color: var(--bg-off-white);
-  padding-top: 64px; /* Account for global navbar if present, or remove if standalone */
+  padding-top: 64px;
+  /* Account for global navbar if present, or remove if standalone */
 }
 
 .admin-sidebar {
@@ -12,7 +13,8 @@
   display: flex;
   flex-direction: column;
   position: fixed;
-  top: 64px; /* Below global navbar */
+  top: 64px;
+  /* Below global navbar */
   bottom: 0;
   left: 0;
   z-index: 10;

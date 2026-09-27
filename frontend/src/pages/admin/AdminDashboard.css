@@ -12,7 +12,7 @@
   align-items: center;
   gap: 20px;
   border: 1px solid var(--border-light);
-  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
 }
 
 .admin-stat-icon {
