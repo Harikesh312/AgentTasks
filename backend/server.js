@@ -51,15 +51,21 @@ app.use('/api/discuss', discussRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/questions', questionsRoutes);
-// Database Connection
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(async () => {
+const PORT = process.env.PORT || 5000;
+
+// Do not accept requests until MongoDB is ready. Otherwise a login arriving
+// during startup can fail while Mongoose is still buffering its query.
+const startServer = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
     console.log('MongoDB Connected');
     await seedAdminAndQuestions();
-  })
-  .catch((err) => console.log('MongoDB Connection Error: ', err));
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  } catch (err) {
+    console.error('Unable to start server:', err);
+    process.exitCode = 1;
+  }
+};
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+startServer();
 // Trigger restart

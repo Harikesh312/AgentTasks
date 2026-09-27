@@ -30,7 +30,7 @@ export default function LoginPage() {
         credentials: 'include',
         body: JSON.stringify({ email, password, rememberMe }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
         throw new Error(data.message || 'Failed to login');
@@ -43,7 +43,9 @@ export default function LoginPage() {
         navigate('/');
       }
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof TypeError
+        ? 'Unable to reach the server. Please check your connection and try again.'
+        : err.message || 'Unable to log in. Please try again.');
     } finally {
       setLoading(false);
     }

@@ -79,7 +79,10 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Please provide email and password' });
     }
 
-    const user = await User.findOne({ email });
+    // Email addresses are case insensitive and users may accidentally enter
+    // whitespace around them. Normalize before looking up the account.
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
 
     if (user && (await bcrypt.compare(password, user.password))) {
       const token = generateToken(user._id, rememberMe ? '7d' : '1d');
