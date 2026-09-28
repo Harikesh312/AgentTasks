@@ -13,6 +13,10 @@ import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminQuestions from './pages/admin/AdminQuestions';
+import AdminInterviews from './pages/admin/AdminInterviews';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
+import AdminSettings from './pages/admin/AdminSettings';
+import AdminLogin from './pages/admin/AdminLogin';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 function ProtectedRoute({ children }) {
@@ -43,12 +47,8 @@ function AdminRoute({ children }) {
     );
   }
 
-  if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (user?.role !== 'admin') {
-    return <Navigate to="/" replace />;
+  if (!isLoggedIn || user?.role !== 'admin') {
+    return <Navigate to="/admin/login" replace />;
   }
 
   return children;
@@ -91,6 +91,8 @@ function App() {
             </ProtectedRoute>
           } />
           
+          <Route path="/admin/login" element={<AdminLogin />} />
+
           <Route path="/admin" element={
             <AdminRoute>
               <AdminLayout />
@@ -99,6 +101,9 @@ function App() {
             <Route index element={<AdminDashboard />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="questions" element={<AdminQuestions />} />
+            <Route path="interviews" element={<AdminInterviews />} />
+            <Route path="analytics" element={<AdminAnalytics />} />
+            <Route path="settings" element={<AdminSettings />} />
           </Route>
         </Routes>
     </>

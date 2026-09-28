@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FiUser, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
+import { FiUser, FiLogOut, FiMenu, FiX, FiShield } from 'react-icons/fi';
 import './Navbar.css';
 
 export default function Navbar() {
@@ -10,6 +10,16 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const dropdownRef = useRef(null);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const goToAdmin = (e) => {
+    e.preventDefault();
+    if (user && user.role === 'admin') {
+      navigate('/admin');
+    } else {
+      navigate('/admin/login');
+    }
+  };
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -75,6 +85,11 @@ export default function Navbar() {
               <Link to="/signup" className="btn-primary btn-sm">Sign Up</Link>
             </div>
           )}
+
+          <a href="/admin" onClick={goToAdmin} className="nav-link" style={{ display: 'flex', alignItems: 'center', marginLeft: '16px', marginRight: '0', textDecoration: 'none' }}>
+            <FiShield size={16} style={{ marginRight: '6px' }} />
+            Admin
+          </a>
         </div>
       </div>
     </nav>

@@ -1,0 +1,134 @@
+/* AdminSettings.css */
+
+.ap-settings-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+.ap-settings-main {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.ap-settings-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Forms */
+.ap-settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.ap-settings-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.ap-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 10px;
+  border-top: 1px solid var(--ap-border);
+  margin-top: 6px;
+}
+
+/* Account Summary Card */
+.ap-account-summary {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 24px !important;
+}
+
+.ap-account-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--ap-accent), #9d84fc);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.6rem;
+  box-shadow: 0 8px 16px rgba(124,92,252,0.25);
+  flex-shrink: 0;
+}
+
+.ap-account-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.ap-account-info h4 {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ap-text);
+}
+
+.ap-account-info p {
+  margin: 0 0 10px;
+  font-size: 0.88rem;
+  color: var(--ap-text-sec);
+}
+
+.ap-account-badges {
+  display: flex;
+  gap: 8px;
+}
+
+/* System Metric List */
+.ap-sys-metric-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.ap-sys-metric-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--ap-border);
+}
+
+.ap-sys-metric-item:last-child {
+  border-bottom: none;
+}
+
+.ap-sys-metric-ico {
+  color: var(--ap-text-muted);
+  display: flex;
+}
+
+.ap-sys-metric-lbl {
+  font-size: 0.9rem;
+  color: var(--ap-text-sec);
+  flex: 1;
+}
+
+.ap-sys-metric-val {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ap-text);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .ap-settings-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .ap-settings-form-row {
+    grid-template-columns: 1fr;
+  }
+}

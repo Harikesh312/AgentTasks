@@ -1,58 +1,130 @@
-.admin-stats-grid {
+/* AdminDashboard.css */
+
+.ap-dash-metrics {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
-}
-
-.admin-stat-card {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  display: flex;
-  align-items: center;
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
-  border: 1px solid var(--border-light);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+  margin-bottom: 24px;
 }
 
-.admin-stat-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.ap-dash-grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 24px;
+  margin-bottom: 24px;
 }
 
-.admin-stat-icon.users {
-  background-color: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-}
-
-.admin-stat-icon.questions {
-  background-color: rgba(139, 92, 246, 0.1);
-  color: #8b5cf6;
-}
-
-.admin-stat-icon.completions {
-  background-color: rgba(16, 185, 129, 0.1);
-  color: #10b981;
-}
-
-.admin-stat-info {
+/* ─── Quick Actions ─── */
+.ap-qa-list {
   display: flex;
   flex-direction: column;
+  gap: 8px;
 }
 
-.admin-stat-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  line-height: 1.2;
+.ap-qa-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--ap-r-sm);
+  background: var(--ap-surface);
+  text-decoration: none;
+  transition: all var(--ap-t);
+  border: 1px solid transparent;
 }
 
-.admin-stat-label {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  font-weight: 500;
+.ap-qa-item:hover {
+  background: var(--ap-accent-lighter);
+  border-color: var(--ap-border);
+}
+
+.ap-qa-item-highlight {
+  background: var(--ap-accent-lighter);
+  border-color: var(--ap-accent-border);
+}
+
+.ap-qa-item-highlight:hover {
+  background: var(--ap-accent-light);
+  border-color: var(--ap-accent);
+}
+
+.ap-qa-item-highlight .ap-qa-ico {
+  background: var(--ap-accent) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(124,92,252,0.2);
+}
+
+.ap-qa-item-highlight .ap-qa-arrow {
+  color: var(--ap-accent);
+  transform: translateX(4px);
+}
+
+.ap-qa-ico {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all var(--ap-t);
+}
+
+.ap-qa-info { flex: 1; }
+.ap-qa-info h4 { margin: 0 0 2px; font-size: 0.95rem; font-weight: 600; color: var(--ap-text); }
+.ap-qa-info p { margin: 0; font-size: 0.82rem; color: var(--ap-text-muted); }
+.ap-qa-arrow { color: var(--ap-text-border); transition: all var(--ap-t); opacity: 0; transform: translateX(-8px); }
+.ap-qa-item:hover .ap-qa-arrow { opacity: 1; transform: translateX(0); color: var(--ap-accent); }
+
+
+/* ─── Recent Users ─── */
+.ap-recent-list { display: flex; flex-direction: column; }
+.ap-recent-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 24px; border-bottom: 1px solid var(--ap-border);
+  transition: background var(--ap-t-fast);
+}
+.ap-recent-item:last-child { border-bottom: none; }
+.ap-recent-item:hover { background: var(--ap-surface-tint); }
+
+
+/* ─── Pie Chart Area ─── */
+.ap-pie-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding-bottom: 30px;
+}
+
+.ap-pie-chart-container {
+  position: relative;
+  width: 160px; height: 160px;
+}
+
+.ap-pie-center {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.ap-pie-center-val { font-size: 1.4rem; font-weight: 700; color: var(--ap-text); line-height: 1.1; }
+.ap-pie-center-lbl { font-size: 0.75rem; color: var(--ap-text-muted); font-weight: 500; }
+
+.ap-pie-legend {
+  width: 100%; display: flex; flex-direction: column; gap: 12px;
+  padding: 0 10px;
+}
+
+.ap-legend-item {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.88rem; color: var(--ap-text-sec);
+}
+.ap-legend-item strong { margin-left: auto; color: var(--ap-text); font-weight: 600; }
+.ap-legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+/* ─── Responsive ─── */
+@media (max-width: 1024px) {
+  .ap-dash-grid { grid-template-columns: 1fr; }
+  .ap-pie-layout { flex-direction: row; justify-content: center; gap: 40px; }
+  .ap-pie-legend { width: auto; }
+}
+
+@media (max-width: 768px) {
+  .ap-dash-metrics { grid-template-columns: 1fr; }
+  .ap-pie-layout { flex-direction: column; }
 }
