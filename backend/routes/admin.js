@@ -191,4 +191,61 @@ router.post('/questions', async (req, res) => {
   }
 });
 
+// @route   PUT /api/admin/questions/:id
+// @desc    Update a question by custom id
+// @access  Private/Admin
+router.put('/questions/:id', async (req, res) => {
+  try {
+    const questionId = parseInt(req.params.id, 10);
+    const question = await Question.findOne({ id: questionId });
+
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found' });
+    }
+
+    const {
+      title, difficulty, category, description, referenceImage,
+      requirements, constraints, requiredContent, maxPromptTurns, isOptimizationTrap
+    } = req.body;
+
+    if (title !== undefined) question.title = title;
+    if (difficulty !== undefined) question.difficulty = difficulty;
+    if (category !== undefined) question.category = category;
+    if (description !== undefined) question.description = description;
+    if (referenceImage !== undefined) question.referenceImage = referenceImage;
+    if (requirements !== undefined) question.requirements = requirements;
+    if (constraints !== undefined) question.constraints = constraints;
+    if (requiredContent !== undefined) question.requiredContent = requiredContent;
+    if (maxPromptTurns !== undefined) question.maxPromptTurns = maxPromptTurns;
+    if (isOptimizationTrap !== undefined) question.isOptimizationTrap = isOptimizationTrap;
+
+    const updatedQuestion = await question.save();
+    res.json(updatedQuestion);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error updating question' });
+  }
+});
+
+// @route   DELETE /api/admin/questions/:id
+// @desc    Delete a question by custom id
+// @access  Private/Admin
+router.delete('/questions/:id', async (req, res) => {
+  try {
+    const questionId = parseInt(req.params.id, 10);
+    const question = await Question.findOne({ id: questionId });
+
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found' });
+    }
+
+    await Question.findOneAndDelete({ id: questionId });
+    res.json({ message: 'Question removed' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error deleting question' });
+  }
+});
+
 export default router;
+

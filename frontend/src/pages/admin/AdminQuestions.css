@@ -108,3 +108,225 @@
     gap: 16px;
   }
 }
+
+
+/* ═══════════════════════════════════════════════════
+   PORTALLED MODAL — always viewport-centered
+   Rendered on document.body via createPortal
+   ═══════════════════════════════════════════════════ */
+
+.apq-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(27, 29, 46, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: apFadeIn 0.2s ease;
+  padding: 20px;
+}
+
+.apq-modal {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 95%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(107, 70, 245, 0.08);
+  animation: apSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+  overflow: hidden;
+}
+
+/* View modal sizing */
+.apq-modal-view {
+  max-width: 600px;
+}
+
+/* Edit modal sizing */
+.apq-modal-edit {
+  max-width: 640px;
+}
+
+/* Delete modal sizing — compact */
+.apq-modal-delete {
+  max-width: 420px;
+}
+
+/* Modal header — always visible */
+.apq-modal-header {
+  padding: 22px 24px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-shrink: 0;
+}
+
+.apq-modal-header h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0b1120;
+  margin: 0;
+}
+
+.apq-modal-header p {
+  font-size: 0.82rem;
+  color: #475569;
+  margin: 3px 0 0;
+}
+
+/* Modal body — scrollable */
+.apq-modal-body {
+  padding: 18px 24px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Modal footer — always visible */
+.apq-modal-footer {
+  padding: 0 24px 22px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+  border-top: 1px solid #d2c8f2;
+  padding-top: 16px;
+  margin-top: 4px;
+}
+
+/* Edit form takes remaining flex space */
+.apq-edit-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+
+/* ═══════════════════════════════════════
+   View Modal — Field Styles
+   ═══════════════════════════════════════ */
+
+.ap-view-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ap-view-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+}
+
+.ap-view-value {
+  font-size: 0.92rem;
+  color: #0b1120;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.ap-view-desc {
+  background: #f6f5fb;
+  border: 1px solid #d2c8f2;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ap-view-row {
+  display: flex;
+  gap: 16px;
+}
+
+.ap-view-list {
+  margin: 4px 0 0 0;
+  padding-left: 18px;
+  font-size: 0.88rem;
+  color: #0b1120;
+  line-height: 1.7;
+}
+
+.ap-view-list li {
+  margin-bottom: 2px;
+}
+
+
+/* ═══════════════════════════════════════
+   Toast Notification
+   ═══════════════════════════════════════ */
+
+.ap-toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  padding: 14px 22px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10000;
+  animation: apToastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1), apToastOut 0.3s ease 2.7s forwards;
+  box-shadow: 0 12px 32px rgba(124, 92, 252, 0.12);
+}
+
+.ap-toast-success {
+  background: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+}
+
+.ap-toast-error {
+  background: #FEF2F2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+
+@keyframes apToastIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes apToastOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(8px); }
+}
+
+
+/* ═══════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .ap-view-row {
+    flex-direction: column;
+  }
+  .apq-overlay {
+    padding: 10px;
+  }
+  .apq-modal {
+    max-height: 90vh;
+  }
+  .ap-toast {
+    left: 14px;
+    right: 14px;
+    bottom: 14px;
+  }
+}
