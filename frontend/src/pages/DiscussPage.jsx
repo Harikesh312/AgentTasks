@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   FiMessageSquare,
   FiSearch,
@@ -17,8 +17,9 @@ import {
   FiUsers
 } from 'react-icons/fi';
 import { Link, useNavigate } from 'react-router-dom';
-import { discussPosts as initialPosts, discussCategories } from '../data/discuss';
+import { discussCategories } from '../data/discuss';
 import userProfile from '../data/userProfile';
+import { API_URL } from '../config';
 import './DiscussPage.css';
 
 /* ─── Helpers ─── */
@@ -52,8 +53,27 @@ export default function DiscussPage() {
   const navigate = useNavigate();
 
   // State
-  const [posts, setPosts] = useState(initialPosts);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('All');
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`${API_URL}/api/discuss/posts`);
+        if (!res.ok) throw new Error('Failed to fetch discussions');
+        const data = await res.json();
+        setPosts(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPosts();
+  }, []);
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('Most Recent');
   const [isComposerOpen, setIsComposerOpen] = useState(false);
@@ -97,35 +117,39 @@ export default function DiscussPage() {
   }, [posts, activeTab, search, sortBy]);
 
   // Actions
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!newPostTitle.trim() || !newPostBody.trim()) return;
 
-    const newPost = {
-      id: Date.now(),
-      type: "question",
-      questionId: newPostQuestionId ? Number(newPostQuestionId) : null,
-      title: newPostTitle,
-      category: newPostCategory,
-      author: userProfile.displayName,
-      authorBadge: userProfile.badges?.[0]?.name || null,
-      authorAvatar: userProfile.avatar,
-      body: newPostBody,
-      promptText: null,
-      turnsUsed: null,
-      scoreAchieved: null,
-      upvotes: 0,
-      commentCount: 0,
-      createdAt: new Date().toISOString(),
-      comments: []
-    };
-
-    setPosts([newPost, ...posts]);
-    setIsComposerOpen(false);
-    setNewPostTitle('');
-    setNewPostBody('');
-    setNewPostQuestionId('');
-    setActiveTab('All');
-    setSortBy('Most Recent');
+    try {
+      const res = await fetch(`${API_URL}/api/discuss/posts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newPostTitle,
+          category: newPostCategory,
+          body: newPostBody,
+          questionId: newPostQuestionId || null,
+          author: userProfile.displayName,
+          authorBadge: userProfile.badges?.[0]?.name || null,
+          authorAvatar: userProfile.avatar,
+          type: "question"
+        })
+      });
+      
+      if (!res.ok) throw new Error('Failed to create discussion');
+      const savedPost = await res.json();
+      
+      setPosts([savedPost, ...posts]);
+      setIsComposerOpen(false);
+      setNewPostTitle('');
+      setNewPostBody('');
+      setNewPostQuestionId('');
+      setActiveTab('All');
+      setSortBy('Most Recent');
+    } catch (error) {
+      console.error(error);
+      alert('Failed to publish discussion');
+    }
   };
 
   const toggleUpvote = (postId) => {

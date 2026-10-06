@@ -2,11 +2,108 @@ import express from 'express';
 import { protect } from '../middleware/auth.js';
 import Discussion from '../models/Discussion.js';
 import Reply from '../models/Reply.js';
+import DiscussPost from '../models/DiscussPost.js';
+import { ensureDiscussPostsSeeded } from '../utils/seedDiscussPosts.js';
 
 const router = express.Router();
 
 // --------------------------------------------------------
-// Discussions
+// Community Discuss Posts (Used by /discuss page & Admin)
+// --------------------------------------------------------
+
+// Get all discuss posts
+router.get('/posts', async (req, res) => {
+  try {
+    await ensureDiscussPostsSeeded();
+    const posts = await DiscussPost.find().sort({ createdAt: -1 });
+    res.json(posts);
+  } catch (error) {
+    console.error('Error fetching discuss posts:', error);
+    res.status(500).json({ message: 'Server error fetching posts' });
+  }
+});
+
+// Create a new discuss post
+router.post('/posts', async (req, res) => {
+  try {
+    const { title, category, body, questionId, promptText, author, authorBadge, authorAvatar, type } = req.body;
+    if (!title || !body) {
+      return res.status(400).json({ message: 'Title and body are required' });
+    }
+
+    const lastPost = await DiscussPost.findOne().sort({ id: -1 });
+    const newId = lastPost && lastPost.id ? Math.max(lastPost.id + 1, Date.now()) : Date.now();
+
+    const post = new DiscussPost({
+      id: newId,
+      type: type || 'question',
+      questionId: questionId ? Number(questionId) : null,
+      title,
+      category: category || 'Prompt Strategies',
+      author: author || 'Anonymous',
+      authorBadge: authorBadge || null,
+      authorAvatar: authorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(author || 'User')}`,
+      body,
+      promptText: promptText || null,
+      turnsUsed: null,
+      scoreAchieved: null,
+      upvotes: 0,
+      commentCount: 0,
+      createdAt: new Date().toISOString(),
+      comments: []
+    });
+
+    const saved = await post.save();
+    res.status(201).json(saved);
+  } catch (error) {
+    console.error('Error creating discuss post:', error);
+    res.status(500).json({ message: 'Server error creating post' });
+  }
+});
+
+// Add a comment to a discuss post
+router.post('/posts/:id/comments', async (req, res) => {
+  try {
+    const { body, author, authorBadge, authorAvatar } = req.body;
+    if (!body || !body.trim()) {
+      return res.status(400).json({ message: 'Comment body is required' });
+    }
+
+    const pId = Number(req.params.id);
+    const post = await DiscussPost.findOne({
+      $or: [
+        { id: isNaN(pId) ? null : pId },
+        { _id: req.params.id.match(/^[0-9a-fA-F]{24}$/) ? req.params.id : null }
+      ]
+    });
+
+    if (!post) {
+      return res.status(404).json({ message: 'Discussion post not found' });
+    }
+
+    const newComment = {
+      id: Date.now(),
+      author: author || 'Anonymous',
+      authorBadge: authorBadge || null,
+      authorAvatar: authorAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(author || 'User')}`,
+      body: body.trim(),
+      upvotes: 0,
+      createdAt: new Date().toISOString(),
+    };
+
+    post.comments.push(newComment);
+    post.commentCount = post.comments.length;
+    await post.save();
+
+    res.status(201).json(newComment);
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    res.status(500).json({ message: 'Server error adding comment' });
+  }
+});
+
+// --------------------------------------------------------
+// Discussions (Problem-level)
 // --------------------------------------------------------
 
 // Get discussions for a specific problem (with filtering, sorting, pagination)

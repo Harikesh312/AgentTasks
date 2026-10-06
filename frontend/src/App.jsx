@@ -17,6 +17,7 @@ import AdminInterviews from './pages/admin/AdminInterviews';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminLogin from './pages/admin/AdminLogin';
+import AdminReviews from './pages/admin/AdminReviews';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 function ProtectedRoute({ children }) {
@@ -103,6 +104,7 @@ function App() {
             <Route path="questions" element={<AdminQuestions />} />
             <Route path="interviews" element={<AdminInterviews />} />
             <Route path="analytics" element={<AdminAnalytics />} />
+            <Route path="reviews" element={<AdminReviews />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
         </Routes>

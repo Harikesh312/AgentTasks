@@ -10,6 +10,7 @@ import chatRoutes from './routes/chat.js';
 import adminRoutes from './routes/admin.js';
 import questionsRoutes from './routes/questions.js';
 import { seedAdminAndQuestions } from './utils/seedAdmin.js';
+import { ensureDiscussPostsSeeded } from './utils/seedDiscussPosts.js';
 dotenv.config();
 
 const app = express();
@@ -60,6 +61,7 @@ const startServer = async () => {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('MongoDB Connected');
     await seedAdminAndQuestions();
+    await ensureDiscussPostsSeeded();
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   } catch (err) {
     console.error('Unable to start server:', err);
