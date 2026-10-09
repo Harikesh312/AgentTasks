@@ -411,15 +411,16 @@
 
 /* ─── Code View State ─── */
 .fe-code-view-state {
-  flex: 1;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99999;
   background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-  min-height: 500px;
 }
 
 .fe-code-view-header {

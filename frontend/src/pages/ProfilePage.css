@@ -20,7 +20,7 @@
   content: "";
   position: absolute;
   border-radius: 50%;
-  filter: blur(100px);
+  /* Removed massive blur for performance, relying on radial-gradient */
   z-index: -1;
   pointer-events: none;
 }
@@ -121,7 +121,7 @@
   width: 250px;
   height: 150px;
   background: radial-gradient(ellipse, rgba(255, 107, 53, 0.15) 0%, transparent 70%);
-  filter: blur(24px);
+  /* Removed filter: blur(24px) for performance */
   z-index: 0;
   pointer-events: none;
 }
@@ -146,8 +146,8 @@
   position: absolute;
   inset: -10px;
   border-radius: 50%;
-  background: rgba(255, 107, 53, 0.15);
-  filter: blur(12px);
+  background: radial-gradient(circle, rgba(255, 107, 53, 0.15) 0%, transparent 70%);
+  /* Removed filter: blur(12px) for performance */
   z-index: -1;
   pointer-events: none;
 }

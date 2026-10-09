@@ -4,7 +4,7 @@
    ═══════════════════════════════════════════════════ */
 
 /* ─── Admin-scoped CSS Variables ─── */
-.ap-layout {
+:root {
   --ap-sidebar-w: 260px;
   --ap-bg: #f8f8fc;
   --ap-bg-subtle: #f1eff8;

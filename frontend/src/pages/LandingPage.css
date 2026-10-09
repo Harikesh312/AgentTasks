@@ -11,11 +11,11 @@
 /* ─── Edge Orange Atmospheric Shading ─── */
 .landing-page::before {
   content: '';
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   pointer-events: none;
   z-index: 0;
   background:
@@ -42,8 +42,7 @@
 .lp-bg-patch {
   position: absolute;
   border-radius: 9999px;
-  filter: blur(80px);
-  /* Massive blur for soft ambient look */
+  /* Massive blur removed for performance, using radial-gradients instead */
   pointer-events: none;
   z-index: 0;
 }
@@ -54,7 +53,7 @@
   left: -150px;
   width: 500px;
   height: 500px;
-  background: rgba(255, 170, 100, 0.15);
+  background: radial-gradient(circle, rgba(255, 170, 100, 0.15) 0%, transparent 70%);
 }
 
 .patch-hero-top-right {
@@ -62,7 +61,7 @@
   right: -200px;
   width: 600px;
   height: 600px;
-  background: rgba(255, 140, 70, 0.12);
+  background: radial-gradient(circle, rgba(255, 140, 70, 0.12) 0%, transparent 70%);
 }
 
 .patch-hero-center {
@@ -71,7 +70,7 @@
   transform: translateX(-50%);
   width: 700px;
   height: 700px;
-  background: rgba(255, 190, 130, 0.10);
+  background: radial-gradient(circle, rgba(255, 190, 130, 0.10) 0%, transparent 70%);
 }
 
 .patch-hero-edge-left {
@@ -79,7 +78,7 @@
   left: -250px;
   width: 550px;
   height: 550px;
-  background: rgba(255, 150, 80, 0.14);
+  background: radial-gradient(circle, rgba(255, 150, 80, 0.14) 0%, transparent 70%);
 }
 
 /* MIDDLE SECTIONS */
@@ -88,7 +87,7 @@
   left: -100px;
   width: 450px;
   height: 450px;
-  background: rgba(255, 160, 90, 0.12);
+  background: radial-gradient(circle, rgba(255, 160, 90, 0.12) 0%, transparent 70%);
 }
 
 .patch-mid-right {
@@ -96,7 +95,7 @@
   right: -150px;
   width: 650px;
   height: 650px;
-  background: rgba(255, 130, 60, 0.10);
+  background: radial-gradient(circle, rgba(255, 130, 60, 0.10) 0%, transparent 70%);
 }
 
 .patch-mid-center {
@@ -104,7 +103,7 @@
   left: 40%;
   width: 500px;
   height: 500px;
-  background: rgba(255, 180, 120, 0.13);
+  background: radial-gradient(circle, rgba(255, 180, 120, 0.13) 0%, transparent 70%);
 }
 
 /* LOWER SECTIONS */
@@ -113,7 +112,7 @@
   left: -200px;
   width: 600px;
   height: 600px;
-  background: rgba(255, 150, 70, 0.14);
+  background: radial-gradient(circle, rgba(255, 150, 70, 0.14) 0%, transparent 70%);
 }
 
 .patch-low-right {
@@ -121,7 +120,7 @@
   right: -100px;
   width: 450px;
   height: 450px;
-  background: rgba(255, 190, 130, 0.11);
+  background: radial-gradient(circle, rgba(255, 190, 130, 0.11) 0%, transparent 70%);
 }
 
 .patch-low-edge {
@@ -129,16 +128,16 @@
   left: -300px;
   width: 800px;
   height: 800px;
-  background: rgba(255, 120, 50, 0.08);
+  background: radial-gradient(circle, rgba(255, 120, 50, 0.08) 0%, transparent 70%);
 }
 
 /* ─── Global Watermark (SVG lines/dots) ─── */
 .global-page-watermark {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   pointer-events: none;
   overflow: hidden;
   z-index: 0;

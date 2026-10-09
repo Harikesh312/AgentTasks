@@ -6,7 +6,7 @@ import { saveAs } from 'file-saver';
 import {
   FiMessageSquare, FiFolder, FiMonitor,
   FiAlertTriangle, FiBarChart2, FiCheckCircle, FiX,
-  FiClipboard, FiSettings, FiImage, FiCheck, FiArrowLeft, FiArrowRight, FiClock, FiCode, FiZap, FiChevronDown, FiChevronUp, FiChevronLeft, FiChevronRight, FiCircle, FiMessageCircle
+  FiClipboard, FiSettings, FiImage, FiCheck, FiArrowLeft, FiArrowRight, FiClock, FiCode, FiZap, FiChevronDown, FiChevronUp, FiChevronLeft, FiChevronRight, FiCircle, FiMessageCircle, FiActivity
 } from 'react-icons/fi';
 import mockAgentRuns from '../data/mockAgentRuns';
 import PromptChat from '../components/PromptChat';
@@ -16,6 +16,9 @@ import EvaluationCard from '../components/EvaluationCard';
 import QuestionDiscussTab from '../components/QuestionDiscussTab';
 import ChatsTab from '../components/ChatsTab';
 import FullPreviewModal from '../components/FullPreviewModal';
+import BenchmarkPanel from '../components/BenchmarkPanel';
+import TestResultsPanel from '../components/TestResultsPanel';
+import { renderTypePanel } from '../components/question-types/TypePanels';
 import { useAuth } from '../context/AuthContext';
 import './QuestionDetailPage.css';
 
@@ -32,6 +35,7 @@ export default function QuestionDetailPage() {
   const [currentTurn, setCurrentTurn] = useState(0);
   const [currentFiles, setCurrentFiles] = useState(null);
   const [currentPreview, setCurrentPreview] = useState(null);
+  const [currentTypeData, setCurrentTypeData] = useState(null);
   const [showEval, setShowEval] = useState(false);
   const [evaluation, setEvaluation] = useState(null);
   const [toast, setToast] = useState(null);
@@ -108,6 +112,7 @@ export default function QuestionDetailPage() {
   // Auto-evaluate when new preview arrives (Part 4/5)
   useEffect(() => {
     if (!currentPreview || currentTurn === 0 || !agentRun) return;
+    if (question && question.type && question.type !== 'ui-generation') return;
     setPreviewEvalLoading(true);
     setPreviewEvaluation(null);
     const timer = setTimeout(() => {
@@ -125,14 +130,18 @@ export default function QuestionDetailPage() {
     if (responseData.previewHtml) {
       setCurrentPreview(responseData.previewHtml);
     }
+    if (responseData.typeData) {
+      setCurrentTypeData(responseData.typeData);
+    }
     setCurrentTurn((prev) => prev + 1);
     setLastGeneratedAt(new Date());
   }, []);
 
-  const handleLoadConversation = useCallback((loadedTurn, files, previewHtml) => {
+  const handleLoadConversation = useCallback((loadedTurn, files, previewHtml, typeData) => {
     setCurrentTurn(loadedTurn);
     setCurrentFiles(files || null);
     setCurrentPreview(previewHtml || null);
+    setCurrentTypeData(typeData || null);
     setShowEval(false);
     setEvaluation(null);
     setPreviewEvaluation(null);
@@ -157,7 +166,34 @@ export default function QuestionDetailPage() {
   }
 
   // Build context string from question for the AI
-  let questionContext = `Build a component for: "${question.title}"\nDescription: ${question.description}\nRequirements:\n${question.requirements.map((r) => `- ${r}`).join('\n')}\nConstraints:\n${question.constraints.map((c) => `- ${c}`).join('\n')}`;
+  let questionContext = `Build a solution for: "${question.title}"\nDescription: ${question.description}\nRequirements:\n${question.requirements?.map((r) => `- ${r}`).join('\n') || 'None'}\nConstraints:\n${question.constraints?.map((c) => `- ${c}`).join('\n') || 'None'}`;
+
+  if (question.type === 'debugging' && question.buggyCode) {
+    questionContext += `\n\nBuggy Code Provided:\n`;
+    Object.entries(question.buggyCode).forEach(([file, code]) => {
+      questionContext += `--- ${file} ---\n${code}\n\n`;
+    });
+    questionContext += `Expected Behavior: ${question.expectedBehavior}`;
+  } else if (question.type === 'testing' && question.functionCode) {
+    questionContext += `\n\nFunction to Test:\n${question.functionCode}\n\nSpecification:\n${question.functionSpec}`;
+  } else if (question.type === 'optimization' && question.slowCode) {
+    questionContext += `\n\nSlow Code to Optimize:\n`;
+    Object.entries(question.slowCode).forEach(([file, code]) => {
+      questionContext += `--- ${file} ---\n${code}\n\n`;
+    });
+    questionContext += `Performance Target: ${question.performanceTarget}`;
+  } else if (question.type === 'code-review' && question.reviewCode) {
+    questionContext += `\n\nCode to Review:\n`;
+    Object.entries(question.reviewCode).forEach(([file, code]) => {
+      questionContext += `--- ${file} ---\n${code}\n\n`;
+    });
+  } else if (question.type === 'system-scaling' && question.prototypeCode) {
+    questionContext += `\n\nPrototype Code:\n`;
+    Object.entries(question.prototypeCode).forEach(([file, code]) => {
+      questionContext += `--- ${file} ---\n${code}\n\n`;
+    });
+    questionContext += `Scaling Scenario: ${question.scalingScenario}`;
+  }
 
   if (question.requiredContent && Object.keys(question.requiredContent).length > 0) {
     questionContext += `\n\nRequired exact text (reproduce verbatim, do not paraphrase or invent alternatives):\n`;
@@ -179,15 +215,53 @@ export default function QuestionDetailPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!currentFiles || isSubmittingEval) return;
     setIsSubmittingEval(true);
-    setTimeout(() => {
-      setShowEval(true);
-      const evalData = agentRun.evaluateOutput(question, currentFiles, currentTurn);
+
+    if (question.type === 'ui-generation' || !question.type) {
+      setTimeout(() => {
+        setShowEval(true);
+        const evalData = agentRun.evaluateOutput(question, currentFiles, currentTurn);
+        setEvaluation(evalData);
+        setIsSubmittingEval(false);
+      }, 1500);
+      return;
+    }
+
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
+
+      const res = await fetch(`${API_URL}/api/agent/evaluate`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({
+          questionId: question.id,
+          questionType: question.type,
+          studentCode: currentFiles,
+          studentTests: currentFiles?.['test.js'] || currentFiles?.['tests.js'] || null,
+          studentReview: currentTypeData?.issues || null,
+          bugsFound: currentTypeData?.bugsFound || null,
+          analysis: currentTypeData?.analysis || null,
+          patternsApplied: currentTypeData?.patternsApplied || null,
+          turnsUsed: currentTurn,
+        }),
+      });
+
+      if (!res.ok) throw new Error('Evaluation failed');
+      const evalData = await res.json();
+      
       setEvaluation(evalData);
+      setShowEval(true);
+    } catch (err) {
+      console.error(err);
+      setToast('Evaluation failed. Please try again.');
+      setTimeout(() => setToast(null), 3000);
+    } finally {
       setIsSubmittingEval(false);
-    }, 1500);
+    }
   };
 
   const handleTryAgain = () => {
@@ -206,9 +280,21 @@ export default function QuestionDetailPage() {
     { key: 'chat', label: 'Prompt Chat', icon: <FiMessageSquare size={18} /> },
     { key: 'chats', label: 'Chats', icon: <FiMessageCircle size={18} /> },
     { key: 'files', label: 'Files', icon: <FiFolder size={18} /> },
-    { key: 'preview', label: 'Preview', icon: <FiMonitor size={18} /> },
-    { key: 'discuss', label: 'Discuss', icon: <FiMessageSquare size={18} /> },
   ];
+
+  if (question.type === 'ui-generation' || !question.type) {
+    tabs.push({ key: 'preview', label: 'Preview', icon: <FiMonitor size={18} /> });
+  }
+
+  if (question.type === 'optimization') {
+    tabs.push({ key: 'benchmark', label: 'Benchmark', icon: <FiActivity size={18} /> });
+  }
+
+  if (['debugging', 'testing', 'code-review', 'system-scaling'].includes(question.type)) {
+    tabs.push({ key: 'results', label: 'Analysis', icon: <FiCheckCircle size={18} /> });
+  }
+
+  tabs.push({ key: 'discuss', label: 'Discuss', icon: <FiMessageSquare size={18} /> });
 
   return (
     <div className="qd-page" id="question-detail">
@@ -263,20 +349,9 @@ export default function QuestionDetailPage() {
               </div>
             )}
 
-            {/* Reference image */}
-            <div className="qd-section">
-              <h3 className="qd-section-title"><FiImage size={18} /> Target Design</h3>
-              {question.referenceImage ? (
-                <div className="qd-ref-image-container" style={{ marginTop: '12px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border)' }}>
-                  <img src={question.referenceImage} alt="Reference Design" style={{ width: '100%', display: 'block', objectFit: 'contain' }} />
-                </div>
-              ) : (
-                <div className="qd-ref-image">
-                  <FiImage size={36} />
-                  <span>Reference Design Preview</span>
-                </div>
-              )}
-            </div>
+            {/* Dynamic Type Panel */}
+            {renderTypePanel(question)}
+
 
             {/* Requirements */}
             <div className="qd-section">
@@ -365,10 +440,11 @@ export default function QuestionDetailPage() {
                 questionContext={questionContext}
                 onOpenPreview={() => setActiveTab('preview')}
                 onOpenFile={() => setActiveTab('files')}
-                onChatLoaded={({ turns, files, previewHtml }) => {
+                onChatLoaded={({ turns, files, previewHtml, typeData }) => {
                   setCurrentTurn(turns);
                   setCurrentFiles(files);
                   setCurrentPreview(previewHtml);
+                  setCurrentTypeData(typeData || null);
                   if (turns === 0) {
                     setPreviewEvaluation(null);
                     setPreviewEvalLoading(false);
@@ -384,6 +460,7 @@ export default function QuestionDetailPage() {
                 onSubmitSolution={handleSubmit}
                 isSubmitEnabled={!!currentFiles}
                 isSubmittingEval={isSubmittingEval}
+                questionType={question.type}
               />
             </div>
             {activeTab === 'files' && (
@@ -407,6 +484,12 @@ export default function QuestionDetailPage() {
                 setActiveTab={setActiveTab}
                 onOpenFullPreview={handleOpenFullPreview}
               />
+            )}
+            {activeTab === 'benchmark' && (
+              <BenchmarkPanel typeData={currentTypeData} />
+            )}
+            {activeTab === 'results' && (
+              <TestResultsPanel typeData={currentTypeData} questionType={question.type} />
             )}
             {activeTab === 'discuss' && (
               <QuestionDiscussTab

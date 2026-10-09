@@ -16,7 +16,6 @@ import AdminQuestions from './pages/admin/AdminQuestions';
 import AdminInterviews from './pages/admin/AdminInterviews';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminSettings from './pages/admin/AdminSettings';
-import AdminLogin from './pages/admin/AdminLogin';
 import AdminReviews from './pages/admin/AdminReviews';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
@@ -48,8 +47,12 @@ function AdminRoute({ children }) {
     );
   }
 
-  if (!isLoggedIn || user?.role !== 'admin') {
-    return <Navigate to="/admin/login" replace />;
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (user?.role !== 'admin') {
+    return <Navigate to="/" replace />;
   }
 
   return children;
@@ -92,7 +95,6 @@ function App() {
             </ProtectedRoute>
           } />
           
-          <Route path="/admin/login" element={<AdminLogin />} />
 
           <Route path="/admin" element={
             <AdminRoute>

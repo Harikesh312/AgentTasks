@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FiFolder, FiFile, FiDownload, FiCode, FiFileText, FiHash, FiTerminal, FiEye, FiCheckCircle, FiMessageSquare, FiArrowRight, FiArrowLeft, FiArrowDown } from 'react-icons/fi';
 import CodeViewer from './CodeViewer';
 import ScaledPreview from './ScaledPreview';
@@ -118,7 +119,7 @@ export default function FileExplorer({ files, onDownload, onGoToChat, onOpenPrev
       {!selectedFile ? (
         <div className="fe-overview-state">
           <div className="fe-timeline">
-            {['index.html', 'styles.css', 'script.js'].map((name, i) => {
+            {Object.keys(files).map((name, i) => {
               if (!files[name]) return null;
               const extension = ext(name);
               return (
@@ -161,11 +162,11 @@ export default function FileExplorer({ files, onDownload, onGoToChat, onOpenPrev
             </div>
           )}
         </div>
-      ) : (
+      ) : createPortal(
         <div className="fe-code-view-state">
           <div className="fe-code-view-header">
             <button className="fe-back-btn" onClick={() => setSelectedFile(null)}>
-              <FiArrowLeft size={16} /> Back to Overview
+              <FiArrowLeft size={16} /> Close Full Screen
             </button>
             <div className="fe-code-file-info">
               {fileIcons[ext(selectedFile)]}
@@ -175,7 +176,8 @@ export default function FileExplorer({ files, onDownload, onGoToChat, onOpenPrev
           <div className="fe-code-wrapper">
             <CodeViewer code={files[selectedFile]} fileName={selectedFile} />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

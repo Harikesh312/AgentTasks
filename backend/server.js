@@ -5,6 +5,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
 import agentRoutes from './routes/agent.js';
+import evaluateRoutes from './routes/evaluate.js';
 import discussRoutes from './routes/discuss.js';
 import chatRoutes from './routes/chat.js';
 import adminRoutes from './routes/admin.js';
@@ -48,6 +49,7 @@ app.use('/api/auth/register', authLimiter);
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/agent', agentRoutes);
+app.use('/api/agent', evaluateRoutes);
 app.use('/api/discuss', discussRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/admin', adminRoutes);

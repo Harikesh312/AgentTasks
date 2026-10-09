@@ -1,6 +1,7 @@
 import express from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
+import SYSTEM_PROMPTS, { buildQuestionContext } from '../prompts/systemPrompts.js';
 
 dotenv.config();
 
@@ -8,41 +9,6 @@ const router = express.Router();
 
 const apiKey = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey);
-
-const SYSTEM_PROMPT = `You are an expert frontend developer AI agent. When the user asks you to build something, you MUST respond with working HTML, CSS, and JavaScript code.
-
-CRITICAL: Your response MUST be in this EXACT format — a valid JSON object with no extra text before or after it:
-
-\`\`\`json
-{
-  "explanation": "Brief explanation of what you built and how it works",
-  "files": {
-    "index.html": "<!DOCTYPE html>\\n<html>... full HTML code here ...",
-    "styles.css": "/* full CSS code here */",
-    "script.js": "// full JavaScript code here (if needed)"
-  }
-}
-\`\`\`
-
-RULES:
-1. Always include at least index.html and styles.css
-2. The index.html must link to styles.css via <link rel="stylesheet" href="styles.css">
-3. If JavaScript is needed, include script.js and link it via <script src="script.js"></script>
-4. Make the code COMPLETE and WORKING — no placeholders, no TODOs
-5. Use modern CSS (flexbox, grid, custom properties, smooth animations)
-6. Make designs visually stunning with gradients, shadows, transitions, and micro-animations
-7. Use Google Fonts when appropriate (import via CSS @import or HTML link)
-8. Ensure responsive design with media queries
-9. Use semantic HTML5 elements
-10. The JSON must be valid — escape all special characters properly in strings
-11. Do NOT include markdown code fences in your response — just the raw JSON object
-12. Do NOT add any text before or after the JSON object
-13. If the user's context specifies exact required text in quotes (e.g. Headline, Subtext, CTA button text), you MUST reproduce that text exactly and verbatim — same wording, same capitalization, same punctuation. Do NOT paraphrase, rewrite, shorten, or invent alternative copy for any text that is explicitly required. Only change required text if the user's latest prompt explicitly asks you to change that specific piece of text.`;
-
-const model = genAI.getGenerativeModel({
-  model: 'gemini-3.1-flash-lite',
-  systemInstruction: SYSTEM_PROMPT,
-});
 
 const generationConfig = {
   temperature: 0.9,
@@ -52,8 +18,139 @@ const generationConfig = {
   responseMimeType: 'text/plain',
 };
 
+/**
+ * Parse the AI response based on question type.
+ * Returns { files, explanation, previewHtml, typeData } where typeData
+ * contains type-specific parsed fields.
+ */
+function parseAIResponse(fullResponse, questionType) {
+  let jsonStr = fullResponse.trim();
+
+  // Remove markdown code fences if present
+  const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (jsonMatch) {
+    jsonStr = jsonMatch[1].trim();
+  }
+
+  try {
+    const parsed = JSON.parse(jsonStr);
+
+    switch (questionType) {
+      case 'ui-generation': {
+        const files = parsed.files || {};
+        const explanation = parsed.explanation || '';
+        let previewHtml = '';
+
+        const htmlContent = files['index.html'] || '';
+        const cssContent = files['styles.css'] || '';
+        const jsContent = files['script.js'] || '';
+
+        if (htmlContent) {
+          previewHtml = htmlContent
+            .replace(
+              '<link rel="stylesheet" href="styles.css">',
+              `<style>${cssContent}</style>`
+            )
+            .replace(
+              /<link\s+rel=["']stylesheet["']\s+href=["']styles\.css["']\s*\/?>/gi,
+              `<style>${cssContent}</style>`
+            )
+            .replace(
+              '<script src="script.js"></script>',
+              `<script>${jsContent}</script>`
+            )
+            .replace(
+              /<script\s+src=["']script\.js["']\s*><\/script>/gi,
+              `<script>${jsContent}</script>`
+            );
+        }
+
+        return { files, explanation, previewHtml, typeData: {} };
+      }
+
+      case 'debugging': {
+        return {
+          files: parsed.fixedCode || {},
+          explanation: parsed.explanation || '',
+          previewHtml: '',
+          typeData: {
+            bugsFound: parsed.bugsFound || [],
+            testResults: parsed.testResults || '',
+          }
+        };
+      }
+
+      case 'testing': {
+        return {
+          files: { 'tests.js': parsed.testCode || '' },
+          explanation: parsed.explanation || '',
+          previewHtml: '',
+          typeData: {
+            testCount: parsed.testCount || 0,
+            coverageAreas: parsed.coverageAreas || [],
+          }
+        };
+      }
+
+      case 'optimization': {
+        return {
+          files: parsed.optimizedCode || {},
+          explanation: parsed.explanation || '',
+          previewHtml: '',
+          typeData: {
+            analysis: parsed.analysis || {},
+            benchmarkNotes: parsed.benchmarkNotes || '',
+          }
+        };
+      }
+
+      case 'code-review': {
+        return {
+          files: {},
+          explanation: parsed.explanation || '',
+          previewHtml: '',
+          typeData: {
+            issues: parsed.issues || [],
+            summary: parsed.summary || {},
+          }
+        };
+      }
+
+      case 'system-scaling': {
+        return {
+          files: parsed.scaledCode || {},
+          explanation: parsed.explanation || '',
+          previewHtml: '',
+          typeData: {
+            patternsApplied: parsed.patternsApplied || [],
+            architectureNotes: parsed.architectureNotes || '',
+          }
+        };
+      }
+
+      default:
+        return {
+          files: parsed.files || {},
+          explanation: parsed.explanation || fullResponse,
+          previewHtml: '',
+          typeData: {}
+        };
+    }
+  } catch (parseErr) {
+    // If JSON parsing fails, treat the whole response as explanation
+    return {
+      files: { 'response.md': fullResponse },
+      explanation: fullResponse,
+      previewHtml: '',
+      typeData: {}
+    };
+  }
+}
+
+// POST /api/agent/generate
 router.post('/generate', async (req, res) => {
-  const { prompt, context } = req.body;
+  const { prompt, context, questionType } = req.body;
+  const type = questionType || 'ui-generation';
 
   if (!prompt) {
     return res.status(400).json({ error: 'Prompt is required' });
@@ -77,7 +174,7 @@ router.post('/generate', async (req, res) => {
     // Validate the input
     const validationModel = genAI.getGenerativeModel({
       model: 'gemini-3.1-flash-lite',
-      systemInstruction: 'You are an input validator for a frontend coding agent. Your ONLY job is to determine if the user\'s prompt is a valid request to build, fix, or improve a UI component. Respond with exactly "VALID" if it makes sense as a request (even a short one like "Make it blue" or "Build a login page" or "Fix the scrollbar"). Respond with "INVALID" if it is gibberish, conversational chatter (like "hehehe", "hi", "how are you"), or completely unrelated to coding.',
+      systemInstruction: 'You are an input validator for a coding agent. Your ONLY job is to determine if the user\'s prompt is a valid request related to coding, debugging, testing, optimization, code review, or system scaling. Respond with exactly "VALID" if it makes sense as a request (even a short one like "Fix the bug" or "Write tests" or "Optimize the loop"). Respond with "INVALID" if it is gibberish, conversational chatter (like "hehehe", "hi", "how are you"), or completely unrelated to coding.',
     });
 
     const validationResult = await validationModel.generateContent({
@@ -90,11 +187,19 @@ router.post('/generate', async (req, res) => {
       sendEvent('error', {
         phase: 'error',
         code: 'INVALID_INPUT',
-        message: 'Invalid input. Please describe what you want the agent to build, fix, or improve.',
+        message: 'Invalid input. Please describe what you want the agent to do.',
       });
       res.end();
       return;
     }
+
+    // Select system prompt based on question type
+    const systemPrompt = SYSTEM_PROMPTS[type] || SYSTEM_PROMPTS['ui-generation'];
+
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-3.1-flash-lite',
+      systemInstruction: systemPrompt,
+    });
 
     // Build the full prompt with context
     let fullPrompt = prompt;
@@ -102,13 +207,29 @@ router.post('/generate', async (req, res) => {
       fullPrompt = `Previous context:\n${context}\n\nNew request: ${prompt}`;
     }
 
-    // Phase 2: Planning (after a brief delay to show the phase)
+    // Phase 2: Planning
     await new Promise(resolve => setTimeout(resolve, 800));
-    sendEvent('phase', { phase: 'planning', message: 'Planning component structure...' });
+    const planMessages = {
+      'ui-generation': 'Planning component structure...',
+      'debugging': 'Analyzing code for bugs...',
+      'testing': 'Planning test strategy...',
+      'optimization': 'Profiling performance bottlenecks...',
+      'code-review': 'Scanning codebase for issues...',
+      'system-scaling': 'Analyzing scaling requirements...',
+    };
+    sendEvent('phase', { phase: 'planning', message: planMessages[type] || 'Planning...' });
 
     // Phase 3: Start generating
     await new Promise(resolve => setTimeout(resolve, 600));
-    sendEvent('phase', { phase: 'generating', message: 'Generating code...' });
+    const genMessages = {
+      'ui-generation': 'Generating code...',
+      'debugging': 'Generating fixes...',
+      'testing': 'Generating test cases...',
+      'optimization': 'Generating optimized code...',
+      'code-review': 'Generating review report...',
+      'system-scaling': 'Generating scaled architecture...',
+    };
+    sendEvent('phase', { phase: 'generating', message: genMessages[type] || 'Generating...' });
 
     // Call Gemini with streaming
     const result = await model.generateContentStream({
@@ -127,61 +248,17 @@ router.post('/generate', async (req, res) => {
     }
 
     // Phase 4: Creating files — parse the response
-    sendEvent('phase', { phase: 'creating_files', message: 'Creating files...' });
+    const fileMessages = {
+      'ui-generation': 'Creating files...',
+      'debugging': 'Applying fixes...',
+      'testing': 'Compiling test suite...',
+      'optimization': 'Benchmarking improvements...',
+      'code-review': 'Compiling review report...',
+      'system-scaling': 'Assembling scaled system...',
+    };
+    sendEvent('phase', { phase: 'creating_files', message: fileMessages[type] || 'Processing...' });
 
-    // Try to parse files from the response
-    let files = null;
-    let explanation = '';
-    let previewHtml = '';
-
-    try {
-      // Try to extract JSON from the response
-      let jsonStr = fullResponse.trim();
-
-      // Remove markdown code fences if present
-      const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) {
-        jsonStr = jsonMatch[1].trim();
-      }
-
-      const parsed = JSON.parse(jsonStr);
-      if (parsed.files) {
-        files = parsed.files;
-        explanation = parsed.explanation || '';
-
-        // Build preview HTML by combining all files
-        const htmlContent = files['index.html'] || '';
-        const cssContent = files['styles.css'] || '';
-        const jsContent = files['script.js'] || '';
-
-        // Create a self-contained HTML for preview
-        if (htmlContent) {
-          previewHtml = htmlContent
-            .replace(
-              '<link rel="stylesheet" href="styles.css">',
-              `<style>${cssContent}</style>`
-            )
-            .replace(
-              /<link\s+rel=["']stylesheet["']\s+href=["']styles\.css["']\s*\/?>/gi,
-              `<style>${cssContent}</style>`
-            )
-            .replace(
-              '<script src="script.js"></script>',
-              `<script>${jsContent}</script>`
-            )
-            .replace(
-              /<script\s+src=["']script\.js["']\s*><\/script>/gi,
-              `<script>${jsContent}</script>`
-            );
-        }
-      }
-    } catch (parseErr) {
-      // If JSON parsing fails, treat the whole response as explanation
-      explanation = fullResponse;
-      files = {
-        'response.md': fullResponse,
-      };
-    }
+    const { files, explanation, previewHtml, typeData } = parseAIResponse(fullResponse, type);
 
     // Phase 5: Complete
     await new Promise(resolve => setTimeout(resolve, 400));
@@ -192,6 +269,8 @@ router.post('/generate', async (req, res) => {
       explanation,
       previewHtml,
       rawResponse: fullResponse,
+      questionType: type,
+      typeData,
     });
 
     res.write('event: done\ndata: {}\n\n');

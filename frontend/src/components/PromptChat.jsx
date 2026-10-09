@@ -62,14 +62,13 @@ const MarkdownRenderer = ({ content }) => {
   );
 };
 
-const formatPartialJSONToMarkdown = (jsonString) => {
-  if (!jsonString) return '';
-  if (!jsonString.trim().startsWith('{')) return jsonString;
+const parseStreamProgress = (jsonString) => {
+  if (!jsonString) return { explanation: '', files: [], raw: '' };
+  if (!jsonString.trim().startsWith('{')) return { explanation: jsonString, files: [], raw: jsonString };
 
-  let markdown = '';
-  
-  const expMatch = jsonString.match(/"explanation"\s*:\s*"([\s\S]*?)(?="\s*,\s*"files"|"\s*\})/);
   let explanation = '';
+  
+  const expMatch = jsonString.match(/"explanation"\s*:\s*"([\s\S]*?)(?="\s*,\s*"files"|"\s*,\s*"issues"|"\s*\})/);
   if (expMatch) {
     explanation = expMatch[1];
   } else {
@@ -81,50 +80,39 @@ const formatPartialJSONToMarkdown = (jsonString) => {
   }
   
   if (explanation) {
-    markdown += explanation.replace(/\\n/g, '\n').replace(/\\"/g, '"') + '\n\n';
+    explanation = explanation.replace(/\\n/g, '\n').replace(/\\"/g, '"');
   }
 
-  const filesStart = jsonString.indexOf('"files"');
+  let files = [];
+  
+  // Find where the code objects start
+  const fileKeys = ['"files"', '"fixedCode"', '"optimizedCode"', '"scaledCode"'];
+  let filesStart = -1;
+  for (const key of fileKeys) {
+    const idx = jsonString.indexOf(key);
+    if (idx !== -1 && (filesStart === -1 || idx < filesStart)) {
+      filesStart = idx;
+    }
+  }
+
   if (filesStart !== -1) {
     const filesStr = jsonString.substring(filesStart);
     const fileKeyRegex = /"([^"]+\.[a-zA-Z0-9]+)"\s*:\s*"/g;
     let match;
-    let fileMatches = [];
     
     while ((match = fileKeyRegex.exec(filesStr)) !== null) {
-      fileMatches.push({
-        name: match[1],
-        contentStart: match.index + match[0].length
-      });
-    }
-
-    for (let i = 0; i < fileMatches.length; i++) {
-      const file = fileMatches[i];
-      const nextFile = fileMatches[i + 1];
-      
-      let content = '';
-      if (nextFile) {
-        content = filesStr.substring(file.contentStart, nextFile.contentStart);
-        content = content.replace(/",\s*$/, '');
-      } else {
-        content = filesStr.substring(file.contentStart);
-        content = content.replace(/"\s*\}\s*\}?\s*$/, '');
-        if (content.endsWith('"')) content = content.slice(0, -1);
+      if (!files.includes(match[1])) {
+        files.push(match[1]);
       }
-
-      content = content.replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\t/g, '\t');
-      
-      const ext = file.name.split('.').pop() || '';
-      let lang = ext;
-      if (ext === 'js' || ext === 'jsx') lang = 'javascript';
-      if (ext === 'html') lang = 'html';
-      if (ext === 'css') lang = 'css';
-
-      markdown += `\n**${file.name}**\n\`\`\`${lang}\n${content}\n\`\`\`\n`;
     }
   }
+
+  // Handle testing type which just returns a single string under "testCode"
+  if (jsonString.indexOf('"testCode"') !== -1 && !files.includes('tests.js')) {
+    files.push('tests.js');
+  }
   
-  return markdown || jsonString;
+  return { explanation, files, raw: jsonString };
 };
 
 function FileCard({ fileName, code, onOpen }) {
@@ -154,7 +142,7 @@ function FileCard({ fileName, code, onOpen }) {
   );
 }
 
-export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, questionContext, onOpenPreview, onOpenFile, questionId, onChatLoaded, onGoToChats, pendingChatId, onPendingChatConsumed, onOpenFullPreview, onSubmitSolution, isSubmitEnabled, isSubmittingEval }) {
+export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, questionContext, onOpenPreview, onOpenFile, questionId, onChatLoaded, onGoToChats, pendingChatId, onPendingChatConsumed, onOpenFullPreview, onSubmitSolution, isSubmitEnabled, isSubmittingEval, questionType }) {
   const { user, memoryToken, isLoggedIn } = useAuth();
   
   // Chat content state
@@ -190,8 +178,22 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
   };
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isStreaming, currentPhase, streamingText]);
+    if (messages.length > 0) {
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg.role === 'user') {
+        // User just sent a message. Scroll this new prompt to the top of the view.
+        const el = document.getElementById(`chat-bubble-${messages.length - 1}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      } else {
+        // Agent finished, or chat history loaded. Scroll to bottom.
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages.length]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -236,6 +238,7 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
           content: msg.content,
           files: msg.files || null,
           previewHtml: msg.previewHtml || null,
+          typeData: msg.typeData || null,
           isError: msg.isError || false
         }));
         setMessages(restoredMessages);
@@ -265,6 +268,7 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
             turns,
             files: lastFiles,
             previewHtml: lastPreview,
+            typeData: lastTypeData,
           });
         }
       }
@@ -398,6 +402,7 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
         body: JSON.stringify({
           prompt: submittedPrompt,
           context: contextStr || undefined,
+          questionType: questionType,
         }),
         signal: abortControllerRef.current.signal,
       });
@@ -503,6 +508,7 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
             files: finalData.files,
             previewHtml: finalData.previewHtml,
             explanation: finalData.explanation,
+            typeData: finalData.typeData,
           });
         }
       } else {
@@ -614,7 +620,7 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
             </div>
           )}
           {messages.map((msg, i) => (
-            <div key={i} className={`chat-bubble ${msg.role} ${msg.isError ? 'error' : ''}`}>
+            <div key={i} id={`chat-bubble-${i}`} className={`chat-bubble ${msg.role} ${msg.isError ? 'error' : ''}`}>
               <div className="bubble-avatar">
                 {msg.role === 'user' ? <FiUser size={16} /> : <FiCpu size={16} />}
               </div>
@@ -681,11 +687,33 @@ export default function PromptChat({ currentTurn, maxTurns, onAgentResponse, que
                   <FiLoader size={16} className="spin-icon orange-sunburst" />
                   <span className="animated-dots">{PHASE_LABELS[currentPhase] || 'Thinking'}</span>
                 </div>
-                {streamingText && (
-                  <div className="bubble-text markdown-body" style={{ color: 'var(--text-primary)', marginTop: '8px' }}>
-                    <MarkdownRenderer content={formatPartialJSONToMarkdown(streamingText) + ' ▍'} />
-                  </div>
-                )}
+                {streamingText && (() => {
+                  const { explanation, files } = parseStreamProgress(streamingText);
+                  return (
+                    <div className="bubble-text markdown-body" style={{ color: 'var(--text-primary)', marginTop: '8px' }}>
+                      {explanation && <MarkdownRenderer content={explanation + (files.length === 0 ? ' ▍' : '')} />}
+                      
+                      {files.length > 0 && (
+                        <div className="stream-files-progress" style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {files.map((file, idx) => (
+                            <div key={file} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', background: 'var(--bg-secondary)', padding: '6px 12px', borderRadius: '4px', border: '1px solid var(--border)' }}>
+                              {idx === files.length - 1 ? (
+                                <>
+                                  <span style={{ color: 'var(--text-primary)', fontWeight: 500 }} className="animated-dots">Generating {file}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <FiCheckCircle size={14} style={{ color: 'var(--success)' }} />
+                                  <span style={{ color: 'var(--text-secondary)' }}>Generated {file}</span>
+                                </>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           )}

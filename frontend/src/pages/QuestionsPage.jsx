@@ -11,6 +11,7 @@ export default function QuestionsPage() {
   const [search, setSearch] = useState('');
   const [difficulty, setDifficulty] = useState('All');
   const [category, setCategory] = useState('All');
+  const [questionType, setQuestionType] = useState('All');
   const [activeTab, setActiveTab] = useState('All Problems');
   
   const [questions, setQuestions] = useState([]);
@@ -44,6 +45,7 @@ export default function QuestionsPage() {
     setSearch(filters.search);
     setDifficulty(filters.difficulty);
     setCategory(filters.category);
+    setQuestionType(filters.questionType || 'All');
   };
 
   // Stats calculation
@@ -82,9 +84,12 @@ export default function QuestionsPage() {
     if (category !== 'All') {
       result = result.filter((q) => q.category === category);
     }
+    if (questionType && questionType !== 'All') {
+      result = result.filter((q) => (q.type || 'ui-generation') === questionType);
+    }
     
     return result;
-  }, [search, difficulty, category, activeTab, completedQuestions, questions]);
+  }, [search, difficulty, category, questionType, activeTab, completedQuestions, questions]);
     
   if (loading) {
     return (
@@ -117,7 +122,7 @@ export default function QuestionsPage() {
           <div className="header-text">
             <h1 className="page-title">Problems</h1>
             <p className="page-subtitle">
-              Practice guiding AI agents to build real UIs. Write prompts, not code.
+              Practice AI-assisted coding interviews across UI, algorithms, and system design.
             </p>
           </div>
           

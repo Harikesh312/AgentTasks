@@ -12,15 +12,6 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const goToAdmin = (e) => {
-    e.preventDefault();
-    if (user && user.role === 'admin') {
-      navigate('/admin');
-    } else {
-      navigate('/admin/login');
-    }
-  };
-
   useEffect(() => {
     const handleClick = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -86,10 +77,12 @@ export default function Navbar() {
             </div>
           )}
 
-          <a href="/admin" onClick={goToAdmin} className="nav-link" style={{ display: 'flex', alignItems: 'center', marginLeft: '16px', marginRight: '0', textDecoration: 'none' }}>
-            <FiShield size={16} style={{ marginRight: '6px' }} />
-            Admin
-          </a>
+          {isLoggedIn && user?.role === 'admin' && (
+            <Link to="/admin" className="nav-link" style={{ display: 'flex', alignItems: 'center', marginLeft: '16px', marginRight: '0', textDecoration: 'none' }}>
+              <FiShield size={16} style={{ marginRight: '6px' }} />
+              Admin
+            </Link>
+          )}
         </div>
       </div>
     </nav>
