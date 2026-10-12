@@ -13,7 +13,6 @@ import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminQuestions from './pages/admin/AdminQuestions';
-import AdminInterviews from './pages/admin/AdminInterviews';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminReviews from './pages/admin/AdminReviews';
@@ -104,7 +103,6 @@ function App() {
             <Route index element={<AdminDashboard />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="questions" element={<AdminQuestions />} />
-            <Route path="interviews" element={<AdminInterviews />} />
             <Route path="analytics" element={<AdminAnalytics />} />
             <Route path="reviews" element={<AdminReviews />} />
             <Route path="settings" element={<AdminSettings />} />

@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../config';
-import { FiUsers, FiFileText, FiCheckCircle, FiArrowRight } from 'react-icons/fi';
+import { FiUsers, FiFileText, FiCheckCircle, FiArrowRight, FiBarChart2 } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import './AdminDashboard.css';
@@ -213,11 +213,11 @@ export default function AdminDashboard() {
               </div>
               <FiArrowRight className="ap-qa-arrow" size={16} />
             </Link>
-            <Link to="/admin/interviews" className="ap-qa-item ap-shade-green">
-              <div className="ap-qa-ico" style={{ background: '#E2F8ED', color: '#059669' }}><FiCheckCircle size={18} /></div>
+            <Link to="/admin/analytics" className="ap-qa-item ap-shade-green">
+              <div className="ap-qa-ico" style={{ background: '#E2F8ED', color: '#059669' }}><FiBarChart2 size={18} /></div>
               <div className="ap-qa-info">
-                <h4>Interviews</h4>
-                <p>Monitor interview sessions</p>
+                <h4>Platform Analytics</h4>
+                <p>View detailed metrics</p>
               </div>
               <FiArrowRight className="ap-qa-arrow" size={16} />
             </Link>

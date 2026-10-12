@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   FiCalendar,
   FiClock,
@@ -15,19 +16,20 @@ import {
   FiStar,
   FiTrendingUp,
   FiTarget,
-  FiPlay,
-  FiBookOpen,
-  FiCpu,
+  FiCheck,
 } from 'react-icons/fi';
 import { IoTrophyOutline, IoRocketOutline, IoFlameOutline } from 'react-icons/io5';
 import {
-  contests as upcomingContests,
-  liveContest as liveContestData,
-  pastContests as pastContestsData,
-  leaderboard as leaderboardData,
+  contests as staticUpcomingContests,
+  liveContest as staticLiveContestData,
+  pastContests as staticPastContestsData,
+  leaderboard as staticLeaderboardData,
   badges as badgesData,
-  userStats,
+  userStats as staticUserStats,
 } from '../data/contests';
+import { API_URL } from '../config';
+import { useAuth } from '../context/AuthContext';
+import ContestSolvingWorkspace from '../components/ContestSolvingWorkspace';
 import './ContestPage.css';
 
 /* ─── Countdown hook ─── */
@@ -59,13 +61,19 @@ function useLiveCountdown(remainingMs) {
   const [left, setLeft] = useState(remainingMs);
 
   useEffect(() => {
+    setLeft(remainingMs);
+  }, [remainingMs]);
+
+  useEffect(() => {
     if (left <= 0) return;
     const id = setInterval(() => setLeft((l) => Math.max(l - 1000, 0)), 1000);
     return () => clearInterval(id);
   }, [left]);
 
-  const m = Math.floor(left / 60000);
+  const h = Math.floor(left / 3600000);
+  const m = Math.floor((left % 3600000) / 60000);
   const s = Math.floor((left % 60000) / 1000);
+  if (h > 0) return `${h}h ${m}m ${s}s remaining`;
   return `${m}m ${s}s remaining`;
 }
 
@@ -100,7 +108,6 @@ function getContestVisualConfig(contest) {
   }
 
   if (status === 'completed') {
-    // Use original type for icon but muted
     const base = getTypeConfig(type);
     return {
       ...base,
@@ -195,18 +202,170 @@ const TYPE_OPTIONS = ['All Types', 'Weekly', 'Biweekly', 'Monthly', 'Beginner', 
 /*  ContestPage                                */
 /* ─────────────────────────────────────────── */
 export default function ContestPage() {
+  const { isLoggedIn, memoryToken } = useAuth();
+  const navigate = useNavigate();
+
   const [activeTab, setActiveTab] = useState('All');
   const [search, setSearch] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState('All Difficulties');
   const [typeFilter, setTypeFilter] = useState('All Types');
   const [detailContest, setDetailContest] = useState(null);
 
-  const allContests = useMemo(() => {
-    const live = liveContestData ? [liveContestData] : [];
-    const upcoming = Array.isArray(upcomingContests) ? upcomingContests : [];
-    const past = Array.isArray(pastContestsData) ? pastContestsData : [];
-    return [...live, ...upcoming, ...past];
+  // Dynamic backend data with static fallbacks
+  const [liveContest, setLiveContest] = useState(staticLiveContestData);
+  const [upcomingList, setUpcomingList] = useState(staticUpcomingContests);
+  const [pastList, setPastList] = useState(staticPastContestsData);
+  const [userContestStats, setUserContestStats] = useState(staticUserStats);
+  const [leaderboard, setLeaderboard] = useState(staticLeaderboardData);
+
+  // Registered contest IDs set
+  const [registeredIds, setRegisteredIds] = useState(new Set());
+  const [isRegisteringId, setIsRegisteringId] = useState(null);
+
+  // Active contest solving workspace state
+  const [activeSolvingContest, setActiveSolvingContest] = useState(null);
+
+  // Toast message
+  const [toastMessage, setToastMessage] = useState(null);
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  // Fetch real contest data from API
+  const fetchContestsData = useCallback(async () => {
+    try {
+      const headers = {};
+      if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
+
+      const res = await fetch(`${API_URL}/api/contests`, {
+        headers,
+        credentials: 'include',
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.liveContest) setLiveContest(data.liveContest);
+        if (Array.isArray(data.upcomingContests) && data.upcomingContests.length > 0) {
+          setUpcomingList(data.upcomingContests);
+        }
+        if (Array.isArray(data.pastContests) && data.pastContests.length > 0) {
+          setPastList(data.pastContests);
+        }
+
+        // Collect registered IDs
+        const registered = new Set();
+        if (data.liveContest?.isRegistered) registered.add(data.liveContest.id);
+        (data.upcomingContests || []).forEach((c) => {
+          if (c.isRegistered) registered.add(c.id);
+        });
+        setRegisteredIds(registered);
+      }
+    } catch (err) {
+      console.error('Error fetching contests:', err);
+    }
+  }, [memoryToken]);
+
+  // Fetch real user contest stats
+  const fetchUserStats = useCallback(async () => {
+    try {
+      const headers = {};
+      if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
+
+      const res = await fetch(`${API_URL}/api/contests/user/stats`, {
+        headers,
+        credentials: 'include',
+      });
+
+      if (res.ok) {
+        const stats = await res.json();
+        setUserContestStats(stats);
+      }
+    } catch (err) {
+      console.error('Error fetching user stats:', err);
+    }
+  }, [memoryToken]);
+
+  // Fetch leaderboard
+  const fetchLeaderboard = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/contests/leaderboard`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setLeaderboard(data);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching leaderboard:', err);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchContestsData();
+    fetchUserStats();
+    fetchLeaderboard();
+  }, [fetchContestsData, fetchUserStats, fetchLeaderboard]);
+
+  // Handle Enter Contest click
+  const handleEnterContest = (contestToEnter) => {
+    setActiveSolvingContest(contestToEnter);
+  };
+
+  // Handle Contest Registration
+  const handleRegister = async (contestToRegister) => {
+    if (!isLoggedIn) {
+      navigate('/login');
+      return;
+    }
+
+    if (registeredIds.has(contestToRegister.id) || isRegisteringId) {
+      return;
+    }
+
+    setIsRegisteringId(contestToRegister.id);
+
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (memoryToken) headers['Authorization'] = `Bearer ${memoryToken}`;
+
+      const res = await fetch(`${API_URL}/api/contests/${contestToRegister.id}/register`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setRegisteredIds((prev) => new Set([...prev, contestToRegister.id]));
+        showToast(data.message || 'Registered successfully!');
+
+        // Update participant count in state
+        setUpcomingList((prev) =>
+          prev.map((c) =>
+            c.id === contestToRegister.id
+              ? { ...c, participants: (c.participants || 0) + 1, isRegistered: true }
+              : c
+          )
+        );
+      } else {
+        showToast(data.message || 'Registration failed');
+      }
+    } catch (err) {
+      console.error('Registration error:', err);
+      showToast('Registration failed. Please try again.');
+    } finally {
+      setIsRegisteringId(null);
+    }
+  };
+
+  const allContests = useMemo(() => {
+    const live = liveContest ? [liveContest] : [];
+    const upcoming = Array.isArray(upcomingList) ? upcomingList : [];
+    const past = Array.isArray(pastList) ? pastList : [];
+    return [...live, ...upcoming, ...past];
+  }, [liveContest, upcomingList, pastList]);
 
   const filtered = useMemo(() => {
     let list = allContests;
@@ -227,11 +386,11 @@ export default function ContestPage() {
   }, [allContests, activeTab, search, difficultyFilter, typeFilter]);
 
   const nextContest = useMemo(() => {
-    const upcoming = (Array.isArray(upcomingContests) ? upcomingContests : [])
+    const upcoming = (Array.isArray(upcomingList) ? upcomingList : [])
       .filter((c) => c.status === 'upcoming')
       .sort((a, b) => new Date(a.date) - new Date(b.date));
     return upcoming[0] || null;
-  }, []);
+  }, [upcomingList]);
 
   const scrollTo = (id) => {
     const el = document.getElementById(id);
@@ -239,8 +398,22 @@ export default function ContestPage() {
   };
 
   const topPerformers = useMemo(() => {
-    return (Array.isArray(leaderboardData) ? leaderboardData : []).slice(0, 5);
-  }, []);
+    return (Array.isArray(leaderboard) ? leaderboard : []).slice(0, 5);
+  }, [leaderboard]);
+
+  // If in Contest Solving Mode, render the full workspace
+  if (activeSolvingContest) {
+    return (
+      <ContestSolvingWorkspace
+        contest={activeSolvingContest}
+        onExit={() => {
+          setActiveSolvingContest(null);
+          fetchContestsData();
+          fetchUserStats();
+        }}
+      />
+    );
+  }
 
   return (
     <div className="contest-page" id="contest-page">
@@ -283,26 +456,45 @@ export default function ContestPage() {
       </section>
 
       {/* ─── Live Now ─── */}
-      {liveContestData && liveContestData.status === 'live' && (
-        <LiveSection contest={liveContestData} onViewDetails={setDetailContest} />
+      {liveContest && liveContest.status === 'live' && (
+        <LiveSection
+          contest={liveContest}
+          onViewDetails={setDetailContest}
+          onEnterContest={handleEnterContest}
+        />
       )}
 
       {/* ─── Next Contest Countdown ─── */}
-      {nextContest && <NextContestCard contest={nextContest} onViewDetails={setDetailContest} />}
+      {nextContest && (
+        <NextContestCard
+          contest={nextContest}
+          onViewDetails={setDetailContest}
+          onRegister={handleRegister}
+          onEnterContest={handleEnterContest}
+          isRegistered={registeredIds.has(nextContest.id)}
+          isRegistering={isRegisteringId === nextContest.id}
+        />
+      )}
 
       {/* ─── Compact Stats ─── */}
       <section className="stats-section animate-fade" id="stats-section">
         <div className="stats-grid">
           <div className="stat-card">
-            <span className="stat-card-value">{userStats.rating}</span>
+            <span className="stat-card-value">{userContestStats.rating ?? '1200'}</span>
             <span className="stat-card-label">Contest Rating</span>
           </div>
           <div className="stat-card">
-            <span className="stat-card-value">#{userStats.globalRank.toLocaleString()}</span>
+            <span className="stat-card-value">
+              {userContestStats.globalRank === '—'
+                ? '—'
+                : typeof userContestStats.globalRank === 'number'
+                ? `#${userContestStats.globalRank.toLocaleString()}`
+                : userContestStats.globalRank}
+            </span>
             <span className="stat-card-label">Global Rank</span>
           </div>
           <div className="stat-card">
-            <span className="stat-card-value">{userStats.totalContests}</span>
+            <span className="stat-card-value">{userContestStats.totalContests ?? 0}</span>
             <span className="stat-card-label">Contests</span>
           </div>
         </div>
@@ -380,6 +572,8 @@ export default function ContestPage() {
                 contest={c}
                 index={i}
                 onViewDetails={setDetailContest}
+                onEnterContest={handleEnterContest}
+                onRegister={handleRegister}
               />
             ))
           )}
@@ -440,7 +634,7 @@ export default function ContestPage() {
               <div className="tp-name">{entry.user}</div>
               <div className="tp-stat">{entry.solved}</div>
               <div className="tp-stat">{entry.time}</div>
-              <div className="tp-score">{entry.score.toLocaleString()}</div>
+              <div className="tp-score">{entry.score?.toLocaleString()}</div>
             </div>
           ))}
         </div>
@@ -448,16 +642,44 @@ export default function ContestPage() {
 
       {/* ─── Detail Modal ─── */}
       {detailContest && (
-        <ContestDetailModal contest={detailContest} onClose={() => setDetailContest(null)} />
+        <ContestDetailModal
+          contest={detailContest}
+          onClose={() => setDetailContest(null)}
+          onRegister={handleRegister}
+          onEnterContest={handleEnterContest}
+          isRegistered={registeredIds.has(detailContest.id)}
+          isRegistering={isRegisteringId === detailContest.id}
+        />
+      )}
+
+      {/* ─── Toast Feedback ─── */}
+      {toastMessage && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            background: '#18181b',
+            color: '#ffffff',
+            padding: '12px 20px',
+            borderRadius: '10px',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+            zIndex: 9999,
+            fontSize: '0.88rem',
+            fontWeight: 600,
+          }}
+        >
+          {toastMessage}
+        </div>
       )}
     </div>
   );
 }
 
 /* ─────────────────────────────────────────── */
-/*  CONTEST CARD — Completely rebuilt          */
+/*  CONTEST CARD                               */
 /* ─────────────────────────────────────────── */
-function ContestCard({ contest, index, onViewDetails }) {
+function ContestCard({ contest, index, onViewDetails, onEnterContest }) {
   const isLive = contest.status === 'live';
   const isCompleted = contest.status === 'completed';
   const config = getContestVisualConfig(contest);
@@ -530,7 +752,10 @@ function ContestCard({ contest, index, onViewDetails }) {
         </div>
         <div className="cc-cta">
           {isLive ? (
-            <button className="cc-btn cc-btn--live" onClick={() => onViewDetails(contest)}>
+            <button
+              className="cc-btn cc-btn--live"
+              onClick={() => (onEnterContest ? onEnterContest(contest) : onViewDetails(contest))}
+            >
               Enter Contest <FiArrowRight size={18} />
             </button>
           ) : isCompleted ? (
@@ -552,7 +777,7 @@ function ContestCard({ contest, index, onViewDetails }) {
 /*  Sub-components                             */
 /* ─────────────────────────────────────────── */
 
-function NextContestCard({ contest, onViewDetails }) {
+function NextContestCard({ contest, onViewDetails, onRegister, onEnterContest, isRegistered, isRegistering }) {
   const { days, hours, minutes, seconds, expired } = useCountdown(contest.date);
 
   return (
@@ -588,9 +813,24 @@ function NextContestCard({ contest, onViewDetails }) {
         </div>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           {expired ? (
-            <button className="btn-primary">Enter Contest <FiArrowRight size={18} /></button>
+            <button className="btn-primary" onClick={() => onEnterContest(contest)}>
+              Enter Contest <FiArrowRight size={18} />
+            </button>
           ) : (
-            <button className="btn-primary">Register <FiArrowRight size={18} /></button>
+            <button
+              className="btn-primary"
+              onClick={() => onRegister(contest)}
+              disabled={isRegistering || isRegistered}
+              style={isRegistered ? { background: '#10b981', borderColor: '#10b981', cursor: 'default' } : {}}
+            >
+              {isRegistered ? (
+                <>Registered <FiCheck size={16} /></>
+              ) : isRegistering ? (
+                'Registering...'
+              ) : (
+                <>Register <FiArrowRight size={18} /></>
+              )}
+            </button>
           )}
           <button className="btn-outline" onClick={() => onViewDetails(contest)}>
             View Details
@@ -601,7 +841,7 @@ function NextContestCard({ contest, onViewDetails }) {
   );
 }
 
-function LiveSection({ contest, onViewDetails }) {
+function LiveSection({ contest, onViewDetails, onEnterContest }) {
   const remaining = useLiveCountdown(contest.remainingMs || 0);
 
   return (
@@ -609,7 +849,11 @@ function LiveSection({ contest, onViewDetails }) {
       <h2 className="live-section-title">
         <span className="live-dot" /> Live Now
       </h2>
-      <div className="live-card">
+      <div
+        className="live-card"
+        onClick={() => (onEnterContest ? onEnterContest(contest) : onViewDetails(contest))}
+        style={{ cursor: 'pointer' }}
+      >
         <div className="live-card-info">
           <h3>{contest.name}</h3>
           <div className="live-card-meta">
@@ -620,7 +864,14 @@ function LiveSection({ contest, onViewDetails }) {
             <span className="live-meta-tag"><FiZap size={18} /> {contest.difficulty}</span>
           </div>
         </div>
-        <button className="btn-primary cc-btn--live-hero" onClick={() => onViewDetails(contest)}>
+        <button
+          className="btn-primary cc-btn--live-hero"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onEnterContest) onEnterContest(contest);
+            else onViewDetails(contest);
+          }}
+        >
           Enter Contest <FiArrowRight size={18} />
         </button>
       </div>
@@ -628,7 +879,7 @@ function LiveSection({ contest, onViewDetails }) {
   );
 }
 
-function ContestDetailModal({ contest, onClose }) {
+function ContestDetailModal({ contest, onClose, onRegister, onEnterContest, isRegistered, isRegistering }) {
   useEffect(() => {
     const handler = (e) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', handler);
@@ -679,10 +930,31 @@ function ContestDetailModal({ contest, onClose }) {
           )}
           <div className="modal-actions">
             {contest.status === 'upcoming' && (
-              <button className="btn-primary">Register <FiArrowRight size={18} /></button>
+              <button
+                className="btn-primary"
+                onClick={() => onRegister(contest)}
+                disabled={isRegistering || isRegistered}
+                style={isRegistered ? { background: '#10b981', borderColor: '#10b981' } : {}}
+              >
+                {isRegistered ? (
+                  <>Registered <FiCheck size={16} /></>
+                ) : isRegistering ? (
+                  'Registering...'
+                ) : (
+                  <>Register <FiArrowRight size={18} /></>
+                )}
+              </button>
             )}
             {contest.status === 'live' && (
-              <button className="btn-primary">Enter Contest <FiArrowRight size={18} /></button>
+              <button
+                className="btn-primary"
+                onClick={() => {
+                  onClose();
+                  onEnterContest(contest);
+                }}
+              >
+                Enter Contest <FiArrowRight size={18} />
+              </button>
             )}
             <button className="btn-outline" onClick={onClose}>Close</button>
           </div>
@@ -693,7 +965,7 @@ function ContestDetailModal({ contest, onClose }) {
 }
 
 /* ─────────────────────────────────────────── */
-/*  PRIZES SECTION — Premium                   */
+/*  PRIZES SECTION                             */
 /* ─────────────────────────────────────────── */
 function PrizesSection() {
   const prizes = [

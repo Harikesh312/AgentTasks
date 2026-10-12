@@ -10,8 +10,10 @@ import discussRoutes from './routes/discuss.js';
 import chatRoutes from './routes/chat.js';
 import adminRoutes from './routes/admin.js';
 import questionsRoutes from './routes/questions.js';
+import contestsRoutes from './routes/contests.js';
 import { seedAdminAndQuestions } from './utils/seedAdmin.js';
 import { ensureDiscussPostsSeeded } from './utils/seedDiscussPosts.js';
+import { ensureContestsSeeded } from './utils/seedContests.js';
 dotenv.config();
 
 const app = express();
@@ -54,6 +56,7 @@ app.use('/api/discuss', discussRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/questions', questionsRoutes);
+app.use('/api/contests', contestsRoutes);
 const PORT = process.env.PORT || 5000;
 
 // Do not accept requests until MongoDB is ready. Otherwise a login arriving
@@ -64,6 +67,7 @@ const startServer = async () => {
     console.log('MongoDB Connected');
     await seedAdminAndQuestions();
     await ensureDiscussPostsSeeded();
+    await ensureContestsSeeded();
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   } catch (err) {
     console.error('Unable to start server:', err);

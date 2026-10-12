@@ -575,10 +575,11 @@
 .vt-card {
   width: calc(50% - 40px);
   background: var(--bg-white);
-  border: 1px solid var(--border-light);
+  border: 1px solid #D4CDC5;
   border-radius: var(--radius-lg);
   padding: 28px 24px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  text-align: left;
   opacity: 0;
   transform: translateY(16px);
   transition: all 0.55s cubic-bezier(0.16, 1, 0.3, 1);
@@ -599,7 +600,7 @@
 .vt-item:nth-child(odd) .vt-card {
   margin-left: 0;
   margin-right: auto;
-  text-align: right;
+  text-align: left;
 }
 
 .vt-item:nth-child(even) .vt-card {
@@ -622,12 +623,10 @@
   flex-shrink: 0;
 }
 
-/* Align icon based on card side */
-.vt-item:nth-child(odd) .vt-card-icon {
-  margin-left: auto;
-}
-
+/* Align icon consistently to left */
+.vt-item:nth-child(odd) .vt-card-icon,
 .vt-item:nth-child(even) .vt-card-icon {
+  margin-left: 0;
   margin-right: auto;
 }
 

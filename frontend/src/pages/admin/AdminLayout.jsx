@@ -2,7 +2,7 @@ import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useState, useEffect } from 'react';
 import {
-  FiGrid, FiUsers, FiFileText, FiMessageSquare,
+  FiGrid, FiUsers, FiFileText,
   FiBarChart2, FiSettings, FiLogOut, FiMenu, FiX, FiHome, FiStar
 } from 'react-icons/fi';
 import './AdminLayout.css';
@@ -29,7 +29,6 @@ export default function AdminLayout() {
       { path: '/admin/questions', label: 'Questions', icon: <FiFileText size={18} /> },
     ]},
     { section: 'Management', items: [
-      { path: '/admin/interviews', label: 'Interviews', icon: <FiMessageSquare size={18} /> },
       { path: '/admin/analytics', label: 'Analytics', icon: <FiBarChart2 size={18} /> },
       { path: '/admin/reviews', label: 'Reviews', icon: <FiStar size={18} /> },
       { path: '/admin/settings', label: 'Settings', icon: <FiSettings size={18} /> },
