@@ -8,8 +8,8 @@ import './AdminQuestions.css';
 export default function AdminQuestions() {
   const { memoryToken } = useAuth();
 
-  // View state: 'list' or 'add'
-  const [view, setView] = useState('list');
+  // Modal state for Add Question
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // List state
   const [questions, setQuestions] = useState([]);
@@ -63,17 +63,17 @@ export default function AdminQuestions() {
     return h;
   }, [memoryToken]);
 
-  // Fetch questions on list view
+  // Fetch questions on mount
   useEffect(() => {
-    if (view === 'list') fetchQuestions();
-  }, [view]);
+    fetchQuestions();
+  }, []);
 
   // Lock body scroll when any modal is open
   useEffect(() => {
-    const anyOpen = !!(viewQuestion || editQuestion || deleteTarget);
+    const anyOpen = !!(isAddModalOpen || viewQuestion || editQuestion || deleteTarget);
     document.body.style.overflow = anyOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
-  }, [viewQuestion, editQuestion, deleteTarget]);
+  }, [isAddModalOpen, viewQuestion, editQuestion, deleteTarget]);
 
   const fetchQuestions = async () => {
     setLoadingList(true);
@@ -112,25 +112,58 @@ export default function AdminQuestions() {
     setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
   };
 
+  const openAddModal = () => {
+    setError('');
+    setSuccess('');
+    setFormData({
+      title: '', difficulty: 'Easy', category: '', description: '',
+      requirements: '', constraints: '', maxPromptTurns: 5,
+      isOptimizationTrap: false, referenceImage: '/images/references/placeholder.svg'
+    });
+    setIsAddModalOpen(true);
+  };
+
+  const closeAddModal = (force = false) => {
+    if (!force && (formData.title.trim() || formData.category.trim() || formData.description.trim())) {
+      if (!window.confirm('Discard unsaved question details?')) return;
+    }
+    setError('');
+    setSuccess('');
+    setIsAddModalOpen(false);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true); setError(''); setSuccess('');
     try {
+      if (!formData.title.trim()) throw new Error('Title is required');
+      if (!formData.category.trim()) throw new Error('Category is required');
+      if (!formData.description.trim()) throw new Error('Description is required');
+
       const processedData = {
         ...formData,
         requirements: formData.requirements.split('\n').filter(r => r.trim() !== ''),
-        constraints: formData.constraints.split('\n').filter(c => c.trim() !== '')
+        constraints: formData.constraints.split('\n').filter(c => c.trim() !== ''),
+        maxPromptTurns: parseInt(formData.maxPromptTurns, 10) || 5
       };
       const res = await fetch(`${API_URL}/api/admin/questions`, {
         method: 'POST', headers: getJsonHeaders(), credentials: 'include',
         body: JSON.stringify(processedData)
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.message || 'Failed to create question'); }
+      const newQuestion = await res.json();
+      setQuestions(prev => [newQuestion, ...prev]);
       setSuccess('Question created successfully!');
-      setFormData({ title: '', difficulty: 'Easy', category: '', description: '',
+      setFormData({
+        title: '', difficulty: 'Easy', category: '', description: '',
         requirements: '', constraints: '', maxPromptTurns: 5,
-        isOptimizationTrap: false, referenceImage: '/images/references/placeholder.svg' });
-      setTimeout(() => { setSuccess(''); setView('list'); }, 1500);
+        isOptimizationTrap: false, referenceImage: '/images/references/placeholder.svg'
+      });
+      setTimeout(() => {
+        setSuccess('');
+        setIsAddModalOpen(false);
+        showToast('Question created successfully.');
+      }, 700);
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }
   };
@@ -204,84 +237,7 @@ export default function AdminQuestions() {
   };
 
   // ════════════════════════════════════════
-  //  ADD QUESTION VIEW (unchanged)
-  // ════════════════════════════════════════
-
-  if (view === 'add') {
-    return (
-      <div className="ap-questions" style={{ animation: 'apFadeInUp 0.4s ease forwards' }}>
-        <div className="ap-page-header ap-flex-header">
-          <div>
-            <h1>Create New Question</h1>
-            <p>Add a new practice problem to the database.</p>
-          </div>
-          <button className="ap-btn-secondary" onClick={() => setView('list')}>
-            <FiArrowLeft size={16} /> Back to Questions
-          </button>
-        </div>
-        <div className="ap-card ap-questions-form-card ap-shade-lavender">
-          <div className="ap-card-body" style={{ padding: '28px' }}>
-            {success && <div className="ap-success-msg"><FiCheckCircle size={17} />{success}</div>}
-            {error && <div className="ap-error-msg"><FiAlertCircle size={17} />{error}</div>}
-            <form onSubmit={handleSubmit} className="ap-q-form">
-              <div className="ap-q-row">
-                <div className="ap-form-group" style={{ flex: 2 }}>
-                  <label className="ap-form-label">Title <span className="ap-required">*</span></label>
-                  <input type="text" name="title" className="ap-form-input" value={formData.title} onChange={handleChange} required placeholder="e.g. Build a Hero Section" />
-                </div>
-                <div className="ap-form-group" style={{ flex: 1 }}>
-                  <label className="ap-form-label">Category <span className="ap-required">*</span></label>
-                  <input type="text" name="category" className="ap-form-input" value={formData.category} onChange={handleChange} placeholder="e.g. Component" required />
-                </div>
-              </div>
-              <div className="ap-q-row">
-                <div className="ap-form-group" style={{ flex: 1 }}>
-                  <label className="ap-form-label">Difficulty</label>
-                  <select name="difficulty" className="ap-form-select" value={formData.difficulty} onChange={handleChange}>
-                    <option value="Easy">Easy</option><option value="Medium">Medium</option><option value="Hard">Hard</option>
-                  </select>
-                </div>
-                <div className="ap-form-group" style={{ flex: 1 }}>
-                  <label className="ap-form-label">Max Prompt Turns</label>
-                  <input type="number" name="maxPromptTurns" className="ap-form-input" value={formData.maxPromptTurns} onChange={handleChange} min="1" required />
-                </div>
-                <div className="ap-form-group" style={{ flex: 1 }}>
-                  <label className="ap-form-label">Reference Image Path</label>
-                  <input type="text" name="referenceImage" className="ap-form-input" value={formData.referenceImage} onChange={handleChange} placeholder="/images/references/..." />
-                </div>
-              </div>
-              <div className="ap-q-checkbox">
-                <input type="checkbox" id="isOptimizationTrap" name="isOptimizationTrap" checked={formData.isOptimizationTrap} onChange={handleChange} className="ap-checkbox" />
-                <label htmlFor="isOptimizationTrap" className="ap-checkbox-label">Is Optimization Trap?</label>
-              </div>
-              <div className="ap-form-group">
-                <label className="ap-form-label">Description <span className="ap-required">*</span></label>
-                <textarea name="description" className="ap-form-textarea" value={formData.description} onChange={handleChange} rows="4" required placeholder="Describe the question in detail..." />
-              </div>
-              <div className="ap-q-row">
-                <div className="ap-form-group" style={{ flex: 1 }}>
-                  <label className="ap-form-label">Requirements <span style={{ fontWeight: 400, color: 'var(--ap-text-muted)' }}>(one per line)</span></label>
-                  <textarea name="requirements" className="ap-form-textarea" value={formData.requirements} onChange={handleChange} rows="6" placeholder={"Full-width hero section...\nPrimary CTA button..."} />
-                </div>
-                <div className="ap-form-group" style={{ flex: 1 }}>
-                  <label className="ap-form-label">Constraints <span style={{ fontWeight: 400, color: 'var(--ap-text-muted)' }}>(one per line)</span></label>
-                  <textarea name="constraints" className="ap-form-textarea" value={formData.constraints} onChange={handleChange} rows="6" placeholder={"No external CSS frameworks...\nUse semantic HTML..."} />
-                </div>
-              </div>
-              <div className="ap-q-actions">
-                <button type="submit" className="ap-btn-primary" disabled={loading}>
-                  <FiSave size={16} /> {loading ? 'Saving...' : 'Save Question'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ════════════════════════════════════════
-  //  LIST VIEW
+  //  QUESTIONS VIEW
   // ════════════════════════════════════════
 
   return (
@@ -291,7 +247,7 @@ export default function AdminQuestions() {
           <h1>Questions</h1>
           <p>Manage and organize interview questions.</p>
         </div>
-        <button className="ap-btn-primary" onClick={() => setView('add')}>
+        <button className="ap-btn-primary" onClick={openAddModal}>
           <FiPlus size={17} /> Add Question
         </button>
       </div>
@@ -385,6 +341,174 @@ export default function AdminQuestions() {
       </div>
 
       {/* ══════════ PORTALLED MODALS — rendered on document.body ══════════ */}
+
+      {/* CREATE NEW QUESTION MODAL */}
+      {isAddModalOpen && createPortal(
+        <div
+          className="apq-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !loading) closeAddModal();
+          }}
+        >
+          <div className="apq-modal apq-modal-add">
+            <div className="apq-modal-header">
+              <div>
+                <h2>Create New Question</h2>
+                <p>Add a new practice problem to the database.</p>
+              </div>
+              <button
+                type="button"
+                className="ap-modal-close"
+                onClick={() => !loading && closeAddModal()}
+                title="Close"
+              >
+                <FiX size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="apq-form">
+              <div className="apq-modal-body">
+                {success && <div className="ap-success-msg"><FiCheckCircle size={17} />{success}</div>}
+                {error && <div className="ap-error-msg"><FiAlertCircle size={17} />{error}</div>}
+
+                <div className="ap-q-row">
+                  <div className="ap-form-group" style={{ flex: 2 }}>
+                    <label className="ap-form-label">Title <span className="ap-required">*</span></label>
+                    <input
+                      type="text"
+                      name="title"
+                      className="ap-form-input"
+                      value={formData.title}
+                      onChange={handleChange}
+                      required
+                      placeholder="e.g. Build a Hero Section"
+                    />
+                  </div>
+                  <div className="ap-form-group" style={{ flex: 1 }}>
+                    <label className="ap-form-label">Category <span className="ap-required">*</span></label>
+                    <input
+                      type="text"
+                      name="category"
+                      className="ap-form-input"
+                      value={formData.category}
+                      onChange={handleChange}
+                      placeholder="e.g. Component"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="ap-q-row">
+                  <div className="ap-form-group" style={{ flex: 1 }}>
+                    <label className="ap-form-label">Difficulty</label>
+                    <select
+                      name="difficulty"
+                      className="ap-form-select"
+                      value={formData.difficulty}
+                      onChange={handleChange}
+                    >
+                      <option value="Easy">Easy</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Hard">Hard</option>
+                    </select>
+                  </div>
+                  <div className="ap-form-group" style={{ flex: 1 }}>
+                    <label className="ap-form-label">Max Prompt Turns</label>
+                    <input
+                      type="number"
+                      name="maxPromptTurns"
+                      className="ap-form-input"
+                      value={formData.maxPromptTurns}
+                      onChange={handleChange}
+                      min="1"
+                      required
+                    />
+                  </div>
+                  <div className="ap-form-group" style={{ flex: 1 }}>
+                    <label className="ap-form-label">Reference Image Path</label>
+                    <input
+                      type="text"
+                      name="referenceImage"
+                      className="ap-form-input"
+                      value={formData.referenceImage}
+                      onChange={handleChange}
+                      placeholder="/images/references/..."
+                    />
+                  </div>
+                </div>
+
+                <div className="ap-q-checkbox">
+                  <input
+                    type="checkbox"
+                    id="isOptimizationTrap"
+                    name="isOptimizationTrap"
+                    checked={formData.isOptimizationTrap}
+                    onChange={handleChange}
+                    className="ap-checkbox"
+                  />
+                  <label htmlFor="isOptimizationTrap" className="ap-checkbox-label">Is Optimization Trap?</label>
+                </div>
+
+                <div className="ap-form-group">
+                  <label className="ap-form-label">Description <span className="ap-required">*</span></label>
+                  <textarea
+                    name="description"
+                    className="ap-form-textarea"
+                    value={formData.description}
+                    onChange={handleChange}
+                    rows="3"
+                    required
+                    placeholder="Describe the question in detail..."
+                  />
+                </div>
+
+                <div className="ap-q-row">
+                  <div className="ap-form-group" style={{ flex: 1 }}>
+                    <label className="ap-form-label">
+                      Requirements <span style={{ fontWeight: 400, color: 'var(--ap-text-muted)' }}>(one per line)</span>
+                    </label>
+                    <textarea
+                      name="requirements"
+                      className="ap-form-textarea"
+                      value={formData.requirements}
+                      onChange={handleChange}
+                      rows="4"
+                      placeholder={"Full-width hero section...\nPrimary CTA button..."}
+                    />
+                  </div>
+                  <div className="ap-form-group" style={{ flex: 1 }}>
+                    <label className="ap-form-label">
+                      Constraints <span style={{ fontWeight: 400, color: 'var(--ap-text-muted)' }}>(one per line)</span>
+                    </label>
+                    <textarea
+                      name="constraints"
+                      className="ap-form-textarea"
+                      value={formData.constraints}
+                      onChange={handleChange}
+                      rows="4"
+                      placeholder={"No external CSS frameworks...\nUse semantic HTML..."}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="apq-modal-footer">
+                <button
+                  type="button"
+                  className="ap-btn-secondary"
+                  onClick={() => !loading && closeAddModal()}
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="ap-btn-primary" disabled={loading}>
+                  <FiSave size={15} /> {loading ? 'Saving...' : 'Save Question'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* VIEW QUESTION MODAL */}
       {viewQuestion && createPortal(

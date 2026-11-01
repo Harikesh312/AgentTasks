@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../../context/AuthContext';
 import { API_URL } from '../../config';
-import { FiEdit2, FiTrash2, FiPlus, FiX, FiSearch, FiFilter, FiAlertCircle, FiUsers, FiShield, FiUserCheck } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiPlus, FiX, FiSearch, FiFilter, FiAlertCircle, FiUsers, FiShield, FiUserCheck, FiSave, FiCheckCircle } from 'react-icons/fi';
 import './AdminUsers.css';
 
 export default function AdminUsers() {
@@ -21,13 +22,29 @@ export default function AdminUsers() {
   // Form state
   const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'user' });
   const [formError, setFormError] = useState('');
+  const [formSuccess, setFormSuccess] = useState('');
   const [formLoading, setFormLoading] = useState(false);
+
+  // Toast notification
+  const [toast, setToast] = useState(null);
+
+  const showToast = useCallback((message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  }, []);
 
   const { memoryToken, user: currentUser } = useAuth();
 
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    const anyOpen = !!(isModalOpen || deleteTarget);
+    document.body.style.overflow = anyOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [isModalOpen, deleteTarget]);
 
   const fetchUsers = async () => {
     try {
@@ -85,14 +102,16 @@ export default function AdminUsers() {
 
       setUsers(users.filter(u => u._id !== id));
       setDeleteTarget(null);
+      showToast('User deleted successfully.');
     } catch (err) {
-      alert(err.message);
       setDeleteTarget(null);
+      showToast(err.message, 'error');
     }
   };
 
   const openModal = (user = null) => {
     setFormError('');
+    setFormSuccess('');
     if (user) {
       setEditingUser(user);
       setFormData({ name: user.name, email: user.email, password: '', role: user.role });
@@ -103,10 +122,37 @@ export default function AdminUsers() {
     setIsModalOpen(true);
   };
 
+  const closeModal = (force = false) => {
+    if (!force && !editingUser && (formData.name.trim() || formData.email.trim() || formData.password.trim())) {
+      if (!window.confirm('Discard unsaved user details?')) return;
+    }
+    setFormError('');
+    setFormSuccess('');
+    setIsModalOpen(false);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
+    setFormSuccess('');
     setFormLoading(true);
+
+    // Client-side validation
+    if (!formData.name.trim()) {
+      setFormError('Name is required.');
+      setFormLoading(false);
+      return;
+    }
+    if (!formData.email.trim()) {
+      setFormError('Email is required.');
+      setFormLoading(false);
+      return;
+    }
+    if (!editingUser && (!formData.password || formData.password.length < 6)) {
+      setFormError('Password must be at least 6 characters.');
+      setFormLoading(false);
+      return;
+    }
 
     try {
       const headers = { 'Content-Type': 'application/json' };
@@ -134,8 +180,9 @@ export default function AdminUsers() {
 
       if (!res.ok) throw new Error(data.message || 'Failed to save user');
 
-      fetchUsers();
+      await fetchUsers();
       setIsModalOpen(false);
+      showToast(editingUser ? 'User updated successfully.' : 'User created successfully.');
     } catch (err) {
       setFormError(err.message);
     } finally {
@@ -309,37 +356,48 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      {/* Add/Edit Modal */}
-      {isModalOpen && (
-        <div className="ap-modal-overlay" onClick={(e) => e.target === e.currentTarget && setIsModalOpen(false)}>
+      {/* Add/Edit Modal (Portalled to document.body for full viewport coverage) */}
+      {isModalOpen && createPortal(
+        <div
+          className="ap-modal-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !formLoading) closeModal();
+          }}
+        >
           <div className="ap-modal">
             <div className="ap-modal-header">
               <div>
                 <h2>{editingUser ? 'Edit User' : 'Add New User'}</h2>
                 <p>{editingUser ? 'Update user account details.' : 'Create a new user account.'}</p>
               </div>
-              <button className="ap-modal-close" onClick={() => setIsModalOpen(false)}>
+              <button
+                type="button"
+                className="ap-modal-close"
+                onClick={() => !formLoading && closeModal()}
+                title="Close"
+              >
                 <FiX size={20} />
               </button>
             </div>
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
               <div className="ap-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {formError && <div className="ap-error-msg"><FiAlertCircle size={16} /> {formError}</div>}
+                {formSuccess && <div className="ap-success-msg"><FiCheckCircle size={16} /> {formSuccess}</div>}
 
                 <div className="ap-form-group">
-                  <label className="ap-form-label">Name</label>
+                  <label className="ap-form-label">Full Name <span className="ap-required">*</span></label>
                   <input
                     type="text"
                     className="ap-form-input"
                     value={formData.name}
                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                     required
-                    placeholder="Full name"
+                    placeholder="e.g. John Doe"
                   />
                 </div>
 
                 <div className="ap-form-group">
-                  <label className="ap-form-label">Email</label>
+                  <label className="ap-form-label">Email Address <span className="ap-required">*</span></label>
                   <input
                     type="email"
                     className="ap-form-input"
@@ -352,7 +410,7 @@ export default function AdminUsers() {
 
                 <div className="ap-form-group">
                   <label className="ap-form-label">
-                    Password {editingUser && <span style={{ fontWeight: 400, color: 'var(--ap-text-muted)' }}>(leave blank to keep current)</span>}
+                    Password {!editingUser && <span className="ap-required">*</span>} {editingUser && <span style={{ fontWeight: 400, color: 'var(--ap-text-muted)' }}>(leave blank to keep current)</span>}
                   </label>
                   <input
                     type="password"
@@ -360,12 +418,12 @@ export default function AdminUsers() {
                     value={formData.password}
                     onChange={e => setFormData({ ...formData, password: e.target.value })}
                     required={!editingUser}
-                    placeholder={editingUser ? '••••••••' : 'Enter password'}
+                    placeholder={editingUser ? '••••••••' : 'Enter password (min 6 characters)'}
                   />
                 </div>
 
                 <div className="ap-form-group">
-                  <label className="ap-form-label">Role</label>
+                  <label className="ap-form-label">User Role</label>
                   <select
                     className="ap-form-select"
                     value={formData.role}
@@ -378,7 +436,12 @@ export default function AdminUsers() {
               </div>
 
               <div className="ap-modal-footer">
-                <button type="button" className="ap-btn-secondary" onClick={() => setIsModalOpen(false)}>
+                <button
+                  type="button"
+                  className="ap-btn-secondary"
+                  onClick={() => !formLoading && closeModal()}
+                  disabled={formLoading}
+                >
                   Cancel
                 </button>
                 <button type="submit" className="ap-btn-primary" disabled={formLoading}>
@@ -387,38 +450,73 @@ export default function AdminUsers() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Delete Confirmation Modal */}
-      {deleteTarget && (
-        <div className="ap-modal-overlay" onClick={(e) => e.target === e.currentTarget && setDeleteTarget(null)}>
-          <div className="ap-modal" style={{ maxWidth: '400px' }}>
-            <div className="ap-modal-body" style={{ padding: '32px 24px', textAlign: 'center' }}>
+      {/* Delete Confirmation Modal (Portalled to document.body) */}
+      {deleteTarget && createPortal(
+        <div
+          className="ap-modal-overlay"
+          onClick={(e) => e.target === e.currentTarget && setDeleteTarget(null)}
+        >
+          <div className="ap-modal" style={{ maxWidth: '420px' }}>
+            <div className="ap-modal-header">
+              <div>
+                <h2>Delete User</h2>
+              </div>
+              <button
+                type="button"
+                className="ap-modal-close"
+                onClick={() => setDeleteTarget(null)}
+                title="Close"
+              >
+                <FiX size={20} />
+              </button>
+            </div>
+            <div className="ap-modal-body" style={{ padding: '24px 24px 16px', textAlign: 'center' }}>
               <div className="ap-del-icon">
                 <FiAlertCircle size={26} />
               </div>
-              <h3 style={{ margin: '16px 0 8px', fontSize: '1.2rem', color: 'var(--ap-text)', fontWeight: 700 }}>
-                Delete User
-              </h3>
-              <p style={{ color: 'var(--ap-text-sec)', fontSize: '0.9rem', margin: '0 0 24px', lineHeight: 1.5 }}>
-                Are you sure you want to delete <strong>{deleteTarget.name}</strong>? This action cannot be undone.
+              <p style={{ color: 'var(--ap-text-sec)', fontSize: '0.9rem', margin: '16px 0 6px', lineHeight: 1.5 }}>
+                Are you sure you want to delete this user?
               </p>
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                <button className="ap-btn-secondary" onClick={() => setDeleteTarget(null)}>
-                  Cancel
-                </button>
-                <button
-                  className="ap-btn-primary"
-                  style={{ background: '#EF4444' }}
-                  onClick={() => handleDelete(deleteTarget._id)}
-                >
-                  <FiTrash2 size={15} /> Delete
-                </button>
-              </div>
+              <p style={{ color: 'var(--ap-text)', fontSize: '0.92rem', fontWeight: 600, margin: '0 0 6px', lineHeight: 1.5 }}>
+                "{deleteTarget.name}" ({deleteTarget.email})
+              </p>
+              <p style={{ color: 'var(--ap-text-muted)', fontSize: '0.8rem', margin: '0', lineHeight: 1.5 }}>
+                This action cannot be undone.
+              </p>
+            </div>
+            <div className="ap-modal-footer" style={{ justifyContent: 'center' }}>
+              <button
+                type="button"
+                className="ap-btn-secondary"
+                onClick={() => setDeleteTarget(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="ap-btn-primary"
+                style={{ background: 'linear-gradient(135deg, #EF4444, #DC2626)', boxShadow: '0 4px 12px rgba(239,68,68,0.25)' }}
+                onClick={() => handleDelete(deleteTarget._id)}
+              >
+                <FiTrash2 size={15} /> Delete User
+              </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
+      )}
+
+      {/* TOAST NOTIFICATION */}
+      {toast && createPortal(
+        <div className={`ap-toast ap-toast-${toast.type}`}>
+          {toast.type === 'success' ? <FiCheckCircle size={16} /> : <FiAlertCircle size={16} />}
+          {toast.message}
+        </div>,
+        document.body
       )}
     </div>
   );

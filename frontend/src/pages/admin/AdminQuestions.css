@@ -40,8 +40,8 @@
 }
 
 .ap-questions-form-card {
-  max-width: 920px;
-  margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
 }
 
 .ap-q-form {
@@ -117,72 +117,83 @@
 
 .apq-overlay {
   position: fixed;
+  inset: 0;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(27, 29, 46, 0.45);
-  backdrop-filter: blur(4px);
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 99999;
   animation: apFadeIn 0.2s ease;
   padding: 20px;
+  box-sizing: border-box;
 }
 
 .apq-modal {
   background: #ffffff;
   border-radius: 16px;
-  width: 95%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(107, 70, 245, 0.08);
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2), 0 4px 20px rgba(107, 70, 245, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.9);
   animation: apSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
-  max-height: 85vh;
+  max-height: 90vh;
   overflow: hidden;
+  position: relative;
+  z-index: 100000;
 }
 
-/* View modal sizing */
+/* Modals sizing */
+.apq-modal-add {
+  max-width: 760px;
+}
+
 .apq-modal-view {
-  max-width: 600px;
-}
-
-/* Edit modal sizing */
-.apq-modal-edit {
   max-width: 640px;
 }
 
-/* Delete modal sizing — compact */
+.apq-modal-edit {
+  max-width: 760px;
+}
+
 .apq-modal-delete {
   max-width: 420px;
 }
 
 /* Modal header — always visible */
 .apq-modal-header {
-  padding: 22px 24px 0;
+  padding: 22px 24px 18px;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   flex-shrink: 0;
+  border-bottom: 1px solid var(--ap-border);
 }
 
 .apq-modal-header h2 {
-  font-size: 1.15rem;
+  font-size: 1.22rem;
   font-weight: 700;
-  color: #0b1120;
+  color: var(--ap-text);
   margin: 0;
 }
 
 .apq-modal-header p {
-  font-size: 0.82rem;
-  color: #475569;
-  margin: 3px 0 0;
+  font-size: 0.84rem;
+  color: var(--ap-text-muted);
+  margin: 4px 0 0;
 }
 
 /* Modal body — scrollable */
 .apq-modal-body {
-  padding: 18px 24px;
+  padding: 22px 24px;
   overflow-y: auto;
   flex: 1;
   min-height: 0;
@@ -193,17 +204,19 @@
 
 /* Modal footer — always visible */
 .apq-modal-footer {
-  padding: 0 24px 22px;
+  padding: 16px 24px;
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
   flex-shrink: 0;
-  border-top: 1px solid #d2c8f2;
-  padding-top: 16px;
-  margin-top: 4px;
+  border-top: 1px solid var(--ap-border);
+  background: #fafafc;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
 }
 
-/* Edit form takes remaining flex space */
+/* Form takes remaining flex space */
+.apq-form,
 .apq-edit-form {
   display: flex;
   flex-direction: column;
